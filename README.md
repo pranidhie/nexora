@@ -1,8 +1,9 @@
-# NexusERP – AI-Powered Quality Engineering Platform
+# NEXORA
+## AI-Powered Enterprise ERP & Quality Engineering Platform
 
 ## Overview
 
-NexusERP is a modern enterprise ERP platform built to demonstrate AI-powered Quality Engineering across the complete Software Development and Testing Lifecycle (SDLC & STLC).
+NEXORA is a modern enterprise ERP platform built to demonstrate AI-powered Quality Engineering across the complete Software Development and Testing Lifecycle (SDLC & STLC).
 
 The project combines enterprise application development with AI-assisted quality practices, automation, DevOps, and modern software engineering.
 
