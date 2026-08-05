@@ -2,29 +2,69 @@
 
 ## Overview
 
-The Procurement Management module supports multiple user roles. Each role has different responsibilities and system permissions to ensure secure and efficient procurement operations.
+The NEXORA Procurement Management module uses role-based access control (RBAC) to ensure procurement activities are performed securely and only by authorised users.
+
+Each user is assigned one or more roles, with permissions that define the actions they can perform.
 
 ---
 
-# 1. Procurement Officer
+# 1. Requesting Employee
 
 ## Description
 
-A Procurement Officer is responsible for creating and managing suppliers and purchase orders before they are submitted for approval.
+A Requesting Employee identifies business needs and creates Purchase Requisitions for approval.
 
 ## Responsibilities
 
-- Create suppliers
-- Update supplier information
-- Create purchase orders
-- Add purchase order items
-- Edit draft purchase orders
-- Submit purchase orders
-- View purchase order history
+- Create Purchase Requisitions
+- Edit Draft Requisitions
+- Submit Requisitions
+- View Own Requisitions
 
 ## Permissions
 
+✅ Create Purchase Requisitions
+
+✅ Edit Draft Purchase Requisitions
+
+✅ Submit Purchase Requisitions
+
+✅ View Own Purchase Requisitions
+
+❌ Approve Requisitions
+
+❌ Approve Purchase Orders
+
+❌ Manage Suppliers
+
+❌ Manage Users
+
+---
+
+# 2. Procurement Officer
+
+## Description
+
+The Procurement Officer manages suppliers and creates Purchase Orders from approved Purchase Requisitions or creates authorised Direct Purchase Orders.
+
+## Responsibilities
+
+- Manage Suppliers
+- Manage Supplier Contacts
+- Maintain Supplier Item Catalogue
+- Create Purchase Orders
+- Create Direct Purchase Orders
+- Edit Draft Purchase Orders
+- Submit Purchase Orders
+- View Procurement History
+
+## Permissions
+
+✅ Manage Suppliers
+
 ✅ Create Purchase Orders
+
+✅ Create Direct Purchase Orders
 
 ✅ Edit Draft Purchase Orders
 
@@ -34,53 +74,80 @@ A Procurement Officer is responsible for creating and managing suppliers and pur
 
 ❌ Approve Purchase Orders
 
-❌ Reject Purchase Orders
-
 ❌ Manage Users
 
 ---
 
-# 2. Procurement Manager
+# 3. Nominated Approver
 
 ## Description
 
-A Procurement Manager reviews submitted purchase orders and decides whether they should be approved or rejected.
+The Nominated Approver reviews Purchase Requisitions and Purchase Orders according to the configured approval workflow.
 
 ## Responsibilities
 
-- Review submitted purchase orders
-- Approve purchase orders
-- Reject purchase orders
-- Provide rejection reasons
-- Monitor procurement activities
+- Review submitted documents
+- Approve documents
+- Reject documents
+- Return documents for amendment
+- Add approval comments
 
 ## Permissions
 
-✅ View Purchase Orders
+✅ View Submitted Documents
 
-✅ Approve Purchase Orders
+✅ Approve Documents
 
-✅ Reject Purchase Orders
+✅ Reject Documents
 
-❌ Create Suppliers
+✅ Return for Amendment
+
+❌ Create Purchase Orders
+
+❌ Manage Suppliers
 
 ❌ Manage Users
 
 ---
 
-# 3. System Administrator
+# 4. Procurement Manager
 
 ## Description
 
-The System Administrator manages users, roles, and overall system configuration.
+The Procurement Manager oversees procurement operations and approval configuration.
 
 ## Responsibilities
 
-- Create users
-- Update users
-- Assign roles
-- Activate and deactivate users
-- Manage system configuration
+- Monitor procurement activities
+- Configure approval rules
+- Review procurement performance
+- Manage procurement policies
+
+## Permissions
+
+✅ View All Procurement Records
+
+✅ Configure Approval Rules
+
+✅ View Reports
+
+❌ Manage Users
+
+---
+
+# 5. System Administrator
+
+## Description
+
+The System Administrator manages users, security and system configuration.
+
+## Responsibilities
+
+- Create Users
+- Edit Users
+- Assign Roles
+- Activate or Deactivate Users
+- Configure System Settings
 
 ## Permissions
 
@@ -90,34 +157,40 @@ The System Administrator manages users, roles, and overall system configuration.
 
 ✅ Assign Roles
 
-✅ Manage System Configuration
+✅ Configure System Settings
 
 ---
 
 # Role Access Matrix
 
-| Feature | Procurement Officer | Procurement Manager | Administrator |
-|----------|--------------------|--------------------|---------------|
-| Login | ✅ | ✅ | ✅ |
-| Create Supplier | ✅ | ❌ | ✅ |
-| Edit Supplier | ✅ | ❌ | ✅ |
-| Create Purchase Order | ✅ | ❌ | ✅ |
-| Edit Draft Purchase Order | ✅ | ❌ | ✅ |
-| Submit Purchase Order | ✅ | ❌ | ✅ |
-| Approve Purchase Order | ❌ | ✅ | ✅ |
-| Reject Purchase Order | ❌ | ✅ | ✅ |
-| Manage Users | ❌ | ❌ | ✅ |
+| Feature | Requester | Procurement Officer | Approver | Procurement Manager | Administrator |
+|----------|-----------|---------------------|-----------|---------------------|---------------|
+| Login | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create Purchase Requisition | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Submit Purchase Requisition | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Manage Suppliers | ❌ | ✅ | ❌ | ✅ | ✅ |
+| Create Purchase Order | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Create Direct Purchase Order | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Submit Purchase Order | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Approve Documents | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Reject Documents | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Return for Amendment | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Configure Approval Rules | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Manage Users | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
-## Future Roles
+# Future Roles
 
-As NexusERP grows, additional roles may include:
+Future phases of NEXORA will introduce additional roles, including:
 
-- Warehouse Operator
+- Warehouse Officer
 - Inventory Manager
-- Finance Officer
+- Quality Officer
+- Production Planner
+- Manufacturing Operator
+- Accounts Payable Officer
+- Finance Manager
 - Sales Representative
-- Auditor
 - Executive Manager
-  
+- Auditor
