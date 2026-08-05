@@ -28,6 +28,40 @@ Status: In Progress
 - [ ] Create UI wireframes
 - [ ] Create test strategy
 
+## Phase 1A — Procurement Foundation
+
+- Authentication and role-based access
+- Supplier management
+- Raw material and item catalogue
+- Supplier-item catalogue and pricing
+- Purchase requisitions
+- Standard purchase orders
+- Direct purchase orders
+- Configurable approval workflow
+- Purchase order status management
+- Audit history and notifications
+
+## Phase 1B — Procurement Execution
+
+- Goods receiving
+- Partial and full receipts
+- Batch and expiry capture
+- Food-quality receipt controls
+- Quarantine and release
+
+## Phase 1C — Invoice Control
+
+- Supplier invoices
+- Three-way matching
+- Matching tolerances and exceptions
+- Procurement dashboards and reporting
+
+## Future Integration
+
+- Xero or another accounting platform
+- Accounts-payable bill export
+- Payment status synchronisation
+
 ---
 
 ## Phase 2 – Backend Development
