@@ -1,266 +1,661 @@
 # Procurement Functional Requirements
 
-## 1. Purpose
+# 1. Purpose
 
-This document defines the functional requirements for the NexusERP Procurement Management MVP.
+This document defines the functional requirements for the NEXORA Procurement Management module.
 
-The initial release will support:
-
-- User authentication
-- Supplier management
-- Purchase order creation
-- Purchase order submission
-- Purchase order approval and rejection
-- Purchase order status tracking
-- Audit history
+The Procurement module supports supplier management, raw material and item catalogue management, supplier-item relationships, purchase requisitions, standard purchase orders, direct purchase orders, approval workflows, procurement status management, notifications and audit history for a food manufacturing organisation.
 
 ---
 
-## 2. User Authentication
+# 2. User Authentication
 
-### FR-AUTH-001 — User Login
+## FR-AUTH-001 — User Login
 
 The system shall allow an active registered user to log in using a valid email address and password.
 
-### FR-AUTH-002 — Invalid Login
+---
+
+## FR-AUTH-002 — Invalid Login
 
 The system shall reject invalid login credentials and display an appropriate error message.
 
-### FR-AUTH-003 — Inactive User
+---
+
+## FR-AUTH-003 — Inactive User
 
 The system shall prevent inactive users from logging in.
 
-### FR-AUTH-004 — Role-Based Access
+---
 
-The system shall display and permit functions according to the authenticated user's assigned role.
+## FR-AUTH-004 — Role-Based Access
 
-### FR-AUTH-005 — Logout
-
-The system shall allow an authenticated user to log out securely.
+The system shall display menus, screens and functions according to the authenticated user's assigned role.
 
 ---
 
-## 3. Supplier Management
+## FR-AUTH-005 — Logout
 
-### FR-SUP-001 — Create Supplier
+The system shall allow authenticated users to log out securely.
 
-The system shall allow a Procurement Officer or Administrator to create a supplier.
+---
 
-### FR-SUP-002 — Supplier Information
+# 3. Supplier Management
+
+## FR-SUP-001 — Create Supplier
+
+The system shall allow authorised users to create supplier records.
+
+---
+
+## FR-SUP-002 — Supplier Information
 
 The system shall capture the following supplier information:
 
-- Supplier code
-- Supplier name
-- Email address
-- Phone number
+- Supplier Code
+- Supplier Name
+- Supplier Status
+- Contact Person
+- Email Address
+- Phone Number
 - Address
+- Payment Terms
+- Notes
+
+---
+
+## FR-SUP-003 — Supplier Contacts
+
+The system shall support multiple contacts for a supplier.
+
+One contact may be designated as the Primary Contact.
+
+---
+
+## FR-SUP-004 — Unique Supplier Code
+
+The system shall prevent duplicate Supplier Codes.
+
+---
+
+## FR-SUP-005 — Search Suppliers
+
+The system shall allow users to search suppliers using:
+
+- Supplier Code
+- Supplier Name
 - Status
 
-### FR-SUP-003 — Unique Supplier Code
+---
 
-The system shall prevent the creation of duplicate supplier codes.
+## FR-SUP-006 — View Suppliers
 
-### FR-SUP-004 — View Suppliers
+The system shall display supplier details.
 
-The system shall allow authorised users to view a list of suppliers.
+---
 
-### FR-SUP-005 — Search Suppliers
-
-The system shall allow authorised users to search for suppliers by supplier code or supplier name.
-
-### FR-SUP-006 — Update Supplier
+## FR-SUP-007 — Update Supplier
 
 The system shall allow authorised users to update supplier information.
 
-### FR-SUP-007 — Supplier Status
+---
 
-The system shall allow authorised users to activate or deactivate a supplier.
+## FR-SUP-008 — Activate or Deactivate Supplier
 
-### FR-SUP-008 — Inactive Supplier Restriction
-
-The system shall prevent inactive suppliers from being selected for new purchase orders.
+The system shall allow authorised users to activate or deactivate suppliers.
 
 ---
 
-## 4. Purchase Order Management
+## FR-SUP-009 — Active Supplier Validation
 
-### FR-PO-001 — Create Purchase Order
+Only Active suppliers may be selected in procurement transactions.
 
-The system shall allow a Procurement Officer to create a purchase order.
+---
 
-### FR-PO-002 — Purchase Order Number
+## FR-SUP-010 — Supplier History
 
-The system shall automatically generate a unique purchase order number.
+Supplier transaction history shall remain available after supplier deactivation.
 
-### FR-PO-003 — Select Supplier
+---
 
-The system shall allow the user to select an active supplier for the purchase order.
+# 4. Item Catalogue Management
 
-### FR-PO-004 — Add Purchase Order Items
+## FR-ITEM-001 — Create Catalogue Item
 
-The system shall allow the user to add one or more purchase order items.
+The system shall allow authorised users to create catalogue items.
 
-### FR-PO-005 — Purchase Order Item Information
+---
 
-Each purchase order item shall include:
+## FR-ITEM-002 — Item Information
 
-- Product code
-- Product description
-- Quantity
-- Unit price
-- Line total
+The system shall maintain:
 
-### FR-PO-006 — Calculate Line Total
-
-The system shall automatically calculate each line total as:
-
-`quantity × unit price`
-
-### FR-PO-007 — Calculate Purchase Order Total
-
-The system shall automatically calculate the purchase order total as the sum of all line totals.
-
-### FR-PO-008 — Save Draft
-
-The system shall allow the Procurement Officer to save a purchase order as a draft.
-
-### FR-PO-009 — Edit Purchase Order
-
-The system shall allow a Procurement Officer to edit purchase orders with the status `Draft` or `Rejected`.
-
-### FR-PO-010 — View Purchase Order
-
-The system shall allow authorised users to view purchase-order details.
-
-### FR-PO-011 — List Purchase Orders
-
-The system shall display a list of purchase orders with:
-
-- Purchase order number
-- Supplier
-- Created date
-- Created by
-- Total value
+- Item Code
+- Item Name
+- Item Type
+- Purchase Unit
+- Stock Unit
+- Unit Conversion
+- Category
 - Status
 
-### FR-PO-012 — Filter Purchase Orders
+---
 
-The system shall allow users to filter purchase orders by status, supplier, purchase-order number, and date.
+## FR-ITEM-003 — Unique Item Code
+
+The system shall prevent duplicate Item Codes.
 
 ---
 
-## 5. Submission and Approval Workflow
+## FR-ITEM-004 — Item Categories
 
-### FR-WF-001 — Submit Purchase Order
+The system shall support the following item types:
 
-The system shall allow a Procurement Officer to submit a valid draft purchase order for approval.
-
-### FR-WF-002 — Submission Validation
-
-The system shall validate all mandatory information before allowing submission.
-
-### FR-WF-003 — Submitted Status
-
-The system shall change the purchase-order status from `Draft` to `Submitted` after successful submission.
-
-### FR-WF-004 — Manager Review
-
-The system shall allow a Procurement Manager to view submitted purchase orders awaiting review.
-
-### FR-WF-005 — Approve Purchase Order
-
-The system shall allow a Procurement Manager to approve a submitted purchase order.
-
-### FR-WF-006 — Prevent Self-Approval
-
-The system shall prevent a user from approving a purchase order that they created.
-
-### FR-WF-007 — Reject Purchase Order
-
-The system shall allow a Procurement Manager to reject a submitted purchase order.
-
-### FR-WF-008 — Rejection Reason
-
-The system shall require a rejection reason when a purchase order is rejected.
-
-### FR-WF-009 — Approved Status
-
-The system shall change the status to `Approved` after approval.
-
-### FR-WF-010 — Rejected Status
-
-The system shall change the status to `Rejected` after rejection.
-
-### FR-WF-011 — Approved Order Protection
-
-The system shall prevent approved purchase orders from being edited.
-
-### FR-WF-012 — Resubmit Rejected Order
-
-The system shall allow a Procurement Officer to edit and resubmit a rejected purchase order.
-
-### FR-WF-013 — Cancel Purchase Order
-
-The system shall allow an authorised user to cancel a purchase order with the status `Draft` or `Rejected`.
+- Raw Material
+- Ingredient
+- Packaging Material
+- Cleaning Material
+- Maintenance Item
+- Non-Stock Item
+- Service
 
 ---
 
-## 6. Audit and Status History
+## FR-ITEM-005 — Food Attributes
 
-### FR-AUD-001 — Status History
+The system shall support food-related attributes including:
 
-The system shall record every purchase-order status change.
+- Shelf Life
+- Storage Conditions
+- Batch Tracking
+- Expiry Tracking
+- Country of Origin
+- Allergen Information
 
-### FR-AUD-002 — Audit Information
+---
 
-Each audit-history record shall contain:
+## FR-ITEM-006 — Search Catalogue
 
-- Purchase-order number
-- Previous status
-- New status
-- Action performed
+The system shall allow users to search catalogue items using:
+
+- Item Code
+- Item Name
+- Category
+- Status
+
+---
+
+## FR-ITEM-007 — Update Catalogue Item
+
+The system shall allow authorised users to update catalogue items.
+
+---
+
+## FR-ITEM-008 — Activate or Deactivate Item
+
+The system shall allow authorised users to activate or deactivate catalogue items.
+
+---
+
+## FR-ITEM-009 — Active Item Validation
+
+Only Active catalogue items may be selected during procurement.
+
+---
+
+## FR-ITEM-010 — Unit Conversion
+
+Where Purchase Units differ from Stock Units, the system shall maintain conversion factors.
+
+---
+
+# 5. Supplier-Item Catalogue
+
+## FR-SITEM-001 — Link Supplier to Item
+
+The system shall allow catalogue items to be linked to one or more suppliers.
+
+---
+
+## FR-SITEM-002 — Preferred Supplier
+
+The system shall allow one supplier to be designated as the Preferred Supplier for a catalogue item.
+
+---
+
+## FR-SITEM-003 — Supplier Purchase Price
+
+The system shall maintain supplier purchase prices.
+
+---
+
+## FR-SITEM-004 — Supplier Item Code
+
+The system shall maintain supplier-specific item codes.
+
+---
+
+## FR-SITEM-005 — Purchase Unit
+
+The system shall maintain supplier purchase units.
+
+---
+
+## FR-SITEM-006 — Minimum Order Quantity
+
+The system shall maintain supplier minimum order quantities.
+
+---
+
+## FR-SITEM-007 — Lead Time
+
+The system shall maintain expected supplier lead times.
+
+---
+
+## FR-SITEM-008 — Price History
+
+The system shall retain historical supplier purchase prices.
+
+---
+
+## FR-SITEM-009 — Search Supplier Items
+
+The system shall allow users to search supplier-item relationships.
+
+---
+
+## FR-SITEM-010 — Active Validation
+
+Only Active suppliers and Active catalogue items may be linked.
+
+---
+# 6. Purchase Requisition Management
+
+## FR-PR-001 — Create Purchase Requisition
+
+The system shall allow authorised users to create Purchase Requisitions.
+
+---
+
+## FR-PR-002 — Requisition Information
+
+The system shall capture:
+
+- Requisition Number
+- Requester
+- Department
+- Required Date
+- Justification
+- Status
+
+---
+
+## FR-PR-003 — Add Requisition Items
+
+The system shall allow one or more catalogue items to be added to a Purchase Requisition.
+
+---
+
+## FR-PR-004 — Requisition Item Information
+
+Each requisition line shall contain:
+
+- Catalogue Item
+- Description
+- Quantity
+- Purchase Unit
+- Required Date
+
+---
+
+## FR-PR-005 — Save Draft
+
+The system shall allow Purchase Requisitions to be saved as Draft.
+
+---
+
+## FR-PR-006 — Edit Draft
+
+The system shall allow Draft or Returned for Amendment Purchase Requisitions to be edited.
+
+---
+
+## FR-PR-007 — Submit Requisition
+
+The system shall allow valid Purchase Requisitions to be submitted.
+
+---
+
+## FR-PR-008 — Approval Decision
+
+The system shall allow authorised Approvers to:
+
+- Approve
+- Reject
+- Return for Amendment
+
+---
+
+## FR-PR-009 — Approval Comments
+
+The system shall require comments when rejecting or returning a requisition.
+
+---
+
+## FR-PR-010 — Convert to Purchase Order
+
+The system shall allow Approved Purchase Requisitions to be converted into Purchase Orders.
+
+---
+
+## FR-PR-011 — Cancel Requisition
+
+The system shall allow eligible Purchase Requisitions to be cancelled.
+
+---
+
+## FR-PR-012 — View Requisition History
+
+The system shall allow authorised users to view requisition history.
+
+---
+
+# 7. Purchase Order Management
+
+## FR-PO-001 — Create Purchase Order
+
+The system shall allow authorised Procurement Officers to create Purchase Orders from Approved Purchase Requisitions.
+
+---
+
+## FR-PO-002 — Direct Purchase Order
+
+The system shall allow authorised Procurement Officers to create Direct Purchase Orders without a Purchase Requisition.
+
+---
+
+## FR-PO-003 — Purchase Order Number
+
+The system shall automatically generate a unique Purchase Order Number.
+
+---
+
+## FR-PO-004 — Supplier Selection
+
+The system shall allow users to select only Active suppliers.
+
+---
+
+## FR-PO-005 — Purchase Order Items
+
+The system shall allow one or more catalogue items to be added to the Purchase Order.
+
+---
+
+## FR-PO-006 — Default Supplier Information
+
+The system shall automatically populate:
+
+- Supplier Item Code
+- Purchase Unit
+- Current Supplier Price
+
+from the Supplier-Item Catalogue.
+
+---
+
+## FR-PO-007 — Purchase Order Calculations
+
+The system shall automatically calculate:
+
+- Line Total
+- Purchase Order Total
+
+---
+
+## FR-PO-008 — Save Draft
+
+The system shall allow Purchase Orders to be saved as Draft.
+
+---
+
+## FR-PO-009 — Edit Purchase Order
+
+The system shall allow Draft and Returned for Amendment Purchase Orders to be edited.
+
+---
+
+## FR-PO-010 — Submit Purchase Order
+
+The system shall validate mandatory information before allowing submission.
+
+---
+
+## FR-PO-011 — Purchase Order List
+
+The system shall display Purchase Orders including:
+
+- PO Number
+- Supplier
+- Created By
+- Created Date
+- Total Value
+- Status
+
+---
+
+## FR-PO-012 — Search Purchase Orders
+
+The system shall allow Purchase Orders to be searched using:
+
+- PO Number
+- Supplier
+- Status
+- Date Range
+
+---
+
+## FR-PO-013 — View Purchase Order
+
+The system shall allow authorised users to view Purchase Order details.
+
+---
+
+## FR-PO-014 — Amend Purchase Order
+
+The system shall allow Approved Purchase Orders to be amended through a controlled revision process.
+
+---
+
+## FR-PO-015 — Send to Supplier
+
+The system shall allow Approved Purchase Orders to be generated and sent to suppliers.
+
+---
+
+## FR-PO-016 — Cancel Purchase Order
+
+The system shall allow eligible Purchase Orders to be cancelled.
+
+---
+
+# 8. Approval Workflow
+
+## FR-WF-001 — Auto Approval
+
+The system shall automatically approve Purchase Orders below the configured approval threshold.
+
+---
+
+## FR-WF-002 — Manual Approval
+
+The system shall route Purchase Orders at or above the configured approval threshold to the nominated Approver.
+
+---
+
+## FR-WF-003 — Configurable Threshold
+
+The approval threshold shall be configurable.
+
+---
+
+## FR-WF-004 — Approval Decision
+
+The system shall allow authorised Approvers to:
+
+- Approve
+- Reject
+- Return for Amendment
+
+---
+
+## FR-WF-005 — Approval Comments
+
+The system shall require comments when rejecting or returning Purchase Orders.
+
+---
+
+## FR-WF-006 — Prevent Self Approval
+
+The system shall prevent users from approving Purchase Orders that they created.
+
+---
+
+## FR-WF-007 — Resubmission
+
+Returned Purchase Orders may be edited and resubmitted.
+
+---
+
+# 9. Purchase Order Status Management
+
+## FR-STAT-001 — Purchase Order Status
+
+The system shall maintain the following Purchase Order statuses:
+
+- Draft
+- Submitted
+- Pending Approval
+- Returned for Amendment
+- Approved
+- Rejected
+- Cancelled
+- On Hold
+- Sent to Supplier
+- Closed
+
+---
+
+## FR-STAT-002 — Status Validation
+
+The system shall only allow valid status transitions.
+
+---
+
+## FR-STAT-003 — Status History
+
+Every Purchase Order status change shall be recorded.
+
+---
+
+# 10. Audit History
+
+## FR-AUD-001 — Audit Trail
+
+The system shall record the following procurement actions:
+
+- Create
+- Update
+- Submit
+- Approve
+- Reject
+- Return for Amendment
+- Cancel
+- Status Change
+
+---
+
+## FR-AUD-002 — Audit Information
+
+Each audit record shall include:
+
 - User
-- Date and time
-- Comments or rejection reason
+- Date
+- Time
+- Action
+- Previous Value
+- New Value
 
-### FR-AUD-003 — View History
-
-The system shall allow authorised users to view the status history of a purchase order.
-
----
-
-## 7. Notifications
-
-### FR-NOT-001 — Submission Notification
-
-The system shall notify the Procurement Manager when a purchase order is submitted.
-
-### FR-NOT-002 — Approval Notification
-
-The system shall notify the Procurement Officer when a purchase order is approved.
-
-### FR-NOT-003 — Rejection Notification
-
-The system shall notify the Procurement Officer when a purchase order is rejected and include the rejection reason.
-
-Notifications may initially be displayed inside the application. Email notifications may be added in a future version.
+where applicable.
 
 ---
 
-## 8. MVP Exclusions
+## FR-AUD-003 — View Audit History
 
-The following functions are outside the initial MVP scope:
+The system shall allow authorised users to view procurement audit history.
 
-- Purchase requisitions
-- Product master management
-- Goods receipt
-- Inventory updates
-- Supplier invoicing
-- Financial posting
-- Multi-currency processing
-- Tax calculation
-- Multi-level approvals
-- Budget validation
-- Email notifications
-- AI approval decisions
+---
+
+# 11. Notifications
+
+## FR-NOT-001 — Approval Notification
+
+The system shall notify Approvers when procurement documents require approval.
+
+---
+
+## FR-NOT-002 — Decision Notification
+
+The system shall notify Requesters and Procurement Officers after:
+
+- Approval
+- Rejection
+- Return for Amendment
+
+---
+
+## FR-NOT-003 — Notification Log
+
+The system shall record notification failures.
+
+---
+
+# 12. Phase 1 Scope
+
+The Phase 1 Procurement module includes:
+
+- User Authentication
+- Role-Based Access Control
+- Supplier Management
+- Item Catalogue Management
+- Supplier-Item Catalogue
+- Purchase Requisitions
+- Standard Purchase Orders
+- Direct Purchase Orders
+- Approval Workflow
+- Purchase Order Status Management
+- Audit History
+- Notifications
+
+---
+
+# 13. Phase 1 Exclusions
+
+The following functions are outside the scope of Phase 1:
+
+- Goods Receipt
+- Warehouse Management
+- Inventory Management
+- Batch Inventory Tracking
+- Supplier Invoice Management
+- Three-Way Matching
+- Accounting Integration
+- Payment Processing
+- Multi-Currency
+- Budget Management
+- Manufacturing
+- Production Planning
+- Recipe Management
+- Costing
+- AI Procurement Assistant
