@@ -600,3 +600,805 @@ Stores supplier-specific purchasing information for catalogue items.
   - `supplier_id`
   - `catalogue_item_id`
   - `effective_from`
+---
+
+# 6. Purchase Requisition Tables
+
+## 6.1 `purchase_requisitions`
+
+### Purpose
+
+Stores internal requests for materials, goods or services before a Standard Purchase Order is created.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_requisition_id` | `bigint` | Yes | PK | Identity | Unique requisition identifier |
+| `requisition_number` | `varchar(30)` | Yes | UK |  | Unique business requisition number |
+| `requested_by` | `bigint` | Yes | FK |  | User who created the requisition |
+| `department` | `varchar(100)` | Yes |  | Requesting department |
+| `required_date` | `date` | Yes |  | Date by which items are required |
+| `justification` | `text` | Yes |  | Business reason for the request |
+| `estimated_total` | `numeric(18,2)` | Yes |  | `0.00` | Estimated requisition value |
+| `currency_code` | `varchar(3)` | Yes |  | `AUD` | Requisition currency |
+| `status` | `varchar(30)` | Yes |  | `DRAFT` | Current requisition status |
+| `submitted_at` | `timestamptz` | No |  |  | Submission timestamp |
+| `approved_at` | `timestamptz` | No |  |  | Approval timestamp |
+| `cancelled_at` | `timestamptz` | No |  |  | Cancellation timestamp |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Creation timestamp |
+| `created_by` | `bigint` | Yes | FK |  | User who created the record |
+| `updated_at` | `timestamptz` | Yes |  | `current_timestamp` | Last update timestamp |
+| `updated_by` | `bigint` | Yes | FK |  | User who last updated the record |
+
+### Foreign Keys
+
+- `requested_by` → `users.user_id`
+- `created_by` → `users.user_id`
+- `updated_by` → `users.user_id`
+
+### Allowed Statuses
+
+```text
+DRAFT
+SUBMITTED
+PENDING_APPROVAL
+RETURNED_FOR_AMENDMENT
+APPROVED
+REJECTED
+CANCELLED
+PARTIALLY_CONVERTED
+CONVERTED_TO_PO
+CLOSED
+```
+
+### Constraints
+
+- `requisition_number` must be unique.
+- `required_date` is mandatory.
+- `estimated_total` must be zero or greater.
+- `currency_code` must use a valid supported currency code.
+- Only `DRAFT` and `RETURNED_FOR_AMENDMENT` requisitions may be edited.
+- Only `APPROVED` requisitions may be converted into Standard Purchase Orders.
+- Cancelled requisitions cannot be converted into Purchase Orders.
+
+### Indexes
+
+- Unique index on `requisition_number`
+- Index on `requested_by`
+- Index on `department`
+- Index on `status`
+- Index on `required_date`
+- Index on `created_at`
+
+---
+
+## 6.2 `purchase_requisition_items`
+
+### Purpose
+
+Stores the individual catalogue items or authorised non-catalogue requests included in a Purchase Requisition.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_requisition_item_id` | `bigint` | Yes | PK | Identity | Unique requisition line identifier |
+| `purchase_requisition_id` | `bigint` | Yes | FK |  | Parent Purchase Requisition |
+| `line_number` | `integer` | Yes |  |  | Sequential line number |
+| `catalogue_item_id` | `bigint` | No | FK |  | Requested catalogue item |
+| `description` | `varchar(500)` | Yes |  |  | Item or service description |
+| `quantity` | `numeric(18,4)` | Yes |  |  | Requested quantity |
+| `requested_uom_id` | `bigint` | Yes | FK |  | Requested unit of measure |
+| `estimated_unit_price` | `numeric(18,2)` | Yes |  | `0.00` | Estimated unit price |
+| `estimated_line_total` | `numeric(18,2)` | Yes |  | `0.00` | Quantity multiplied by estimated price |
+| `required_date` | `date` | No |  |  | Line-level required date |
+| `non_catalogue_item` | `boolean` | Yes |  | `false` | Whether the line is outside the catalogue |
+| `converted_quantity` | `numeric(18,4)` | Yes |  | `0.0000` | Quantity already converted to Purchase Orders |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Creation timestamp |
+| `created_by` | `bigint` | Yes | FK |  | User who added the line |
+| `updated_at` | `timestamptz` | Yes |  | `current_timestamp` | Last update timestamp |
+| `updated_by` | `bigint` | Yes | FK |  | User who last updated the line |
+
+### Foreign Keys
+
+- `purchase_requisition_id` → `purchase_requisitions.purchase_requisition_id`
+- `catalogue_item_id` → `catalogue_items.catalogue_item_id`
+- `requested_uom_id` → `units_of_measure.uom_id`
+- `created_by` → `users.user_id`
+- `updated_by` → `users.user_id`
+
+### Constraints
+
+- `line_number` must be unique within each Purchase Requisition.
+- `quantity` must be greater than zero.
+- `estimated_unit_price` must be zero or greater.
+- `estimated_line_total` must equal `quantity × estimated_unit_price`.
+- `converted_quantity` must be zero or greater.
+- `converted_quantity` must not exceed `quantity`.
+- `catalogue_item_id` is required unless `non_catalogue_item = true`.
+- A description is mandatory for all lines.
+- Only active catalogue items may be selected for new requisition lines.
+
+### Indexes
+
+- Unique index on `purchase_requisition_id`, `line_number`
+- Index on `purchase_requisition_id`
+- Index on `catalogue_item_id`
+- Index on `required_date`
+- Index on `non_catalogue_item`
+
+---
+
+# 7. Purchase Order Tables
+
+## 7.1 `purchase_orders`
+
+### Purpose
+
+Stores both Standard Purchase Orders and Direct Purchase Orders.
+
+The `order_type` field identifies the purchasing path.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_order_id` | `bigint` | Yes | PK | Identity | Unique Purchase Order identifier |
+| `po_number` | `varchar(30)` | Yes | UK |  | Unique business Purchase Order number |
+| `order_type` | `varchar(20)` | Yes |  | `STANDARD` | Standard or Direct Purchase Order |
+| `source_requisition_id` | `bigint` | No | FK |  | Source requisition for Standard POs |
+| `supplier_id` | `bigint` | Yes | FK |  | Selected supplier |
+| `supplier_contact_id` | `bigint` | No | FK |  | Supplier contact receiving the PO |
+| `order_date` | `date` | Yes |  | `current_date` | Purchase Order date |
+| `required_delivery_date` | `date` | No |  |  | Requested delivery date |
+| `delivery_address` | `text` | Yes |  |  | Delivery location |
+| `currency_code` | `varchar(3)` | Yes |  | `AUD` | Purchase Order currency |
+| `subtotal` | `numeric(18,2)` | Yes |  | `0.00` | Sum of line totals before tax |
+| `tax_amount` | `numeric(18,2)` | Yes |  | `0.00` | Total tax |
+| `total_amount` | `numeric(18,2)` | Yes |  | `0.00` | Final Purchase Order total |
+| `status` | `varchar(30)` | Yes |  | `DRAFT` | Current Purchase Order status |
+| `revision_number` | `integer` | Yes |  | `0` | Controlled amendment revision |
+| `direct_purchase_reason` | `text` | No |  |  | Mandatory for Direct POs |
+| `approval_threshold_applied` | `numeric(18,2)` | No |  |  | Threshold used during submission |
+| `submitted_at` | `timestamptz` | No |  |  | Submission timestamp |
+| `approved_at` | `timestamptz` | No |  |  | Approval timestamp |
+| `sent_at` | `timestamptz` | No |  |  | Supplier issue timestamp |
+| `cancelled_at` | `timestamptz` | No |  |  | Cancellation timestamp |
+| `closed_at` | `timestamptz` | No |  |  | Closure timestamp |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Creation timestamp |
+| `created_by` | `bigint` | Yes | FK |  | User who created the PO |
+| `updated_at` | `timestamptz` | Yes |  | `current_timestamp` | Last update timestamp |
+| `updated_by` | `bigint` | Yes | FK |  | User who last updated the PO |
+
+### Foreign Keys
+
+- `source_requisition_id` → `purchase_requisitions.purchase_requisition_id`
+- `supplier_id` → `suppliers.supplier_id`
+- `supplier_contact_id` → `supplier_contacts.supplier_contact_id`
+- `created_by` → `users.user_id`
+- `updated_by` → `users.user_id`
+
+### Allowed Order Types
+
+```text
+STANDARD
+DIRECT
+```
+
+### Allowed Statuses
+
+```text
+DRAFT
+SUBMITTED
+PENDING_APPROVAL
+RETURNED_FOR_AMENDMENT
+APPROVED
+REJECTED
+ON_HOLD
+CANCELLED
+SENT_TO_SUPPLIER
+PARTIALLY_RECEIVED
+FULLY_RECEIVED
+PARTIALLY_INVOICED
+FULLY_INVOICED
+MATCHING_EXCEPTION
+MATCHED
+CLOSED
+```
+
+### Constraints
+
+- `po_number` must be unique.
+- `subtotal`, `tax_amount` and `total_amount` must be zero or greater.
+- `revision_number` must be zero or greater.
+- For `STANDARD` Purchase Orders:
+  - `source_requisition_id` is mandatory.
+  - `direct_purchase_reason` must be null.
+- For `DIRECT` Purchase Orders:
+  - `source_requisition_id` must be null.
+  - `direct_purchase_reason` is mandatory.
+- Only active suppliers may be selected for new Purchase Orders.
+- The selected supplier contact must belong to the selected supplier.
+- Approved or Sent Purchase Orders must not be directly overwritten.
+- Material amendments must increment `revision_number` and follow reapproval.
+- Only Approved Purchase Orders may be sent to suppliers.
+
+### Indexes
+
+- Unique index on `po_number`
+- Index on `order_type`
+- Index on `source_requisition_id`
+- Index on `supplier_id`
+- Index on `status`
+- Index on `order_date`
+- Index on `required_delivery_date`
+- Index on `created_by`
+- Composite index on `supplier_id`, `status`
+- Composite index on `status`, `required_delivery_date`
+
+---
+
+## 7.2 `purchase_order_items`
+
+### Purpose
+
+Stores catalogue items, services or authorised non-catalogue lines included in Purchase Orders.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_order_item_id` | `bigint` | Yes | PK | Identity | Unique Purchase Order line identifier |
+| `purchase_order_id` | `bigint` | Yes | FK |  | Parent Purchase Order |
+| `line_number` | `integer` | Yes |  |  | Sequential line number |
+| `source_requisition_item_id` | `bigint` | No | FK |  | Source requisition line |
+| `catalogue_item_id` | `bigint` | No | FK |  | Ordered catalogue item |
+| `supplier_item_id` | `bigint` | No | FK |  | Supplier-item record used for pricing |
+| `description` | `varchar(500)` | Yes |  |  | Purchase line description |
+| `quantity` | `numeric(18,4)` | Yes |  |  | Ordered quantity |
+| `ordered_uom_id` | `bigint` | Yes | FK |  | Ordered unit of measure |
+| `unit_price` | `numeric(18,2)` | Yes |  |  | Unit price |
+| `tax_rate` | `numeric(7,4)` | Yes |  | `0.0000` | Applicable tax percentage |
+| `tax_amount` | `numeric(18,2)` | Yes |  | `0.00` | Calculated line tax |
+| `line_total` | `numeric(18,2)` | Yes |  | `0.00` | Total line amount including applicable calculation rules |
+| `required_delivery_date` | `date` | No |  |  | Line-level required date |
+| `price_overridden` | `boolean` | Yes |  | `false` | Whether default supplier price was overridden |
+| `price_override_reason` | `text` | No |  |  | Reason for authorised override |
+| `non_catalogue_item` | `boolean` | Yes |  | `false` | Whether the line is not a catalogue item |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Creation timestamp |
+| `created_by` | `bigint` | Yes | FK |  | User who added the line |
+| `updated_at` | `timestamptz` | Yes |  | `current_timestamp` | Last update timestamp |
+| `updated_by` | `bigint` | Yes | FK |  | User who last updated the line |
+
+### Foreign Keys
+
+- `purchase_order_id` → `purchase_orders.purchase_order_id`
+- `source_requisition_item_id` → `purchase_requisition_items.purchase_requisition_item_id`
+- `catalogue_item_id` → `catalogue_items.catalogue_item_id`
+- `supplier_item_id` → `supplier_items.supplier_item_id`
+- `ordered_uom_id` → `units_of_measure.uom_id`
+- `created_by` → `users.user_id`
+- `updated_by` → `users.user_id`
+
+### Constraints
+
+- `line_number` must be unique within each Purchase Order.
+- `quantity` must be greater than zero.
+- `unit_price` must be zero or greater.
+- `tax_rate` must be zero or greater.
+- `tax_amount` and `line_total` must be zero or greater.
+- `catalogue_item_id` is required unless `non_catalogue_item = true`.
+- `price_override_reason` is mandatory when `price_overridden = true`.
+- `supplier_item_id`, when provided, must represent:
+  - the selected supplier
+  - the selected catalogue item
+- For Standard Purchase Orders, the source requisition item must belong to the linked source requisition.
+- Converted quantities must not exceed the approved requisition quantity.
+
+### Indexes
+
+- Unique index on `purchase_order_id`, `line_number`
+- Index on `purchase_order_id`
+- Index on `source_requisition_item_id`
+- Index on `catalogue_item_id`
+- Index on `supplier_item_id`
+- Index on `required_delivery_date`
+- Index on `price_overridden`
+
+---
+
+# 8. Approval Configuration and Workflow Tables
+
+## 8.1 `approval_rules`
+
+### Purpose
+
+Stores configurable approval thresholds and nominated approvers.
+
+This prevents approval values such as AUD 1,000 from being permanently hardcoded.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `approval_rule_id` | `bigint` | Yes | PK | Identity | Unique approval rule identifier |
+| `document_type` | `varchar(30)` | Yes |  |  | Document governed by the rule |
+| `minimum_amount` | `numeric(18,2)` | Yes |  | `0.00` | Inclusive lower amount |
+| `maximum_amount` | `numeric(18,2)` | No |  |  | Inclusive upper amount |
+| `currency_code` | `varchar(3)` | Yes |  | `AUD` | Rule currency |
+| `approval_level` | `integer` | Yes |  | `1` | Approval sequence level |
+| `approver_user_id` | `bigint` | No | FK |  | Specifically nominated approver |
+| `approver_role_id` | `bigint` | No | FK |  | Role eligible to approve |
+| `auto_approve` | `boolean` | Yes |  | `false` | Whether the system approves automatically |
+| `active` | `boolean` | Yes |  | `true` | Whether the rule is active |
+| `effective_from` | `date` | Yes |  | `current_date` | Rule start date |
+| `effective_to` | `date` | No |  |  | Rule end date |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Creation timestamp |
+| `created_by` | `bigint` | Yes | FK |  | Creator |
+| `updated_at` | `timestamptz` | Yes |  | `current_timestamp` | Update timestamp |
+| `updated_by` | `bigint` | Yes | FK |  | Last updater |
+
+### Foreign Keys
+
+- `approver_user_id` → `users.user_id`
+- `approver_role_id` → `roles.role_id`
+- `created_by` → `users.user_id`
+- `updated_by` → `users.user_id`
+
+### Allowed Document Types
+
+```text
+PURCHASE_REQUISITION
+PURCHASE_ORDER
+```
+
+### Constraints
+
+- `minimum_amount` must be zero or greater.
+- `maximum_amount`, when provided, must be greater than or equal to `minimum_amount`.
+- `approval_level` must be greater than zero.
+- `effective_to` must not be earlier than `effective_from`.
+- At least one of the following must be supplied when `auto_approve = false`:
+  - `approver_user_id`
+  - `approver_role_id`
+- `approver_user_id` and `approver_role_id` may both be null only for auto-approval rules.
+- Active rules must not contain conflicting overlapping ranges for the same document type, currency and approval level.
+
+### Initial Purchase Order Rule
+
+```text
+Minimum: AUD 0.00
+Maximum: AUD 999.99
+Auto Approve: true
+
+Minimum: AUD 1,000.00
+Maximum: null
+Auto Approve: false
+Nominated Approver: configured user or role
+```
+
+### Indexes
+
+- Index on `document_type`
+- Index on `active`
+- Index on `effective_from`, `effective_to`
+- Composite index on:
+  - `document_type`
+  - `currency_code`
+  - `minimum_amount`
+  - `maximum_amount`
+
+---
+
+## 8.2 `purchase_requisition_approvals`
+
+### Purpose
+
+Stores approval assignments and decisions for Purchase Requisitions.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_requisition_approval_id` | `bigint` | Yes | PK | Identity | Unique approval record |
+| `purchase_requisition_id` | `bigint` | Yes | FK |  | Requisition being reviewed |
+| `approval_rule_id` | `bigint` | No | FK |  | Rule used for assignment |
+| `approval_level` | `integer` | Yes |  | `1` | Approval sequence |
+| `approver_id` | `bigint` | No | FK |  | Assigned approver |
+| `decision` | `varchar(30)` | Yes |  | `PENDING` | Approval decision |
+| `comments` | `text` | No |  |  | Approver comments |
+| `assigned_at` | `timestamptz` | Yes |  | `current_timestamp` | Assignment timestamp |
+| `decided_at` | `timestamptz` | No |  |  | Decision timestamp |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Record creation timestamp |
+
+### Foreign Keys
+
+- `purchase_requisition_id` → `purchase_requisitions.purchase_requisition_id`
+- `approval_rule_id` → `approval_rules.approval_rule_id`
+- `approver_id` → `users.user_id`
+
+### Allowed Decisions
+
+```text
+PENDING
+APPROVED
+REJECTED
+RETURNED_FOR_AMENDMENT
+CANCELLED
+```
+
+### Constraints
+
+- `approval_level` must be greater than zero.
+- An approver cannot approve a requisition they created.
+- `comments` are mandatory for:
+  - `REJECTED`
+  - `RETURNED_FOR_AMENDMENT`
+- `decided_at` is mandatory when the decision is no longer `PENDING`.
+- Only one active pending approval should exist for the same requisition and approval level.
+
+### Indexes
+
+- Index on `purchase_requisition_id`
+- Index on `approver_id`
+- Index on `decision`
+- Composite index on `purchase_requisition_id`, `approval_level`
+
+---
+
+## 8.3 `purchase_order_approvals`
+
+### Purpose
+
+Stores system and human approval decisions for Purchase Orders.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_order_approval_id` | `bigint` | Yes | PK | Identity | Unique PO approval record |
+| `purchase_order_id` | `bigint` | Yes | FK |  | Purchase Order under review |
+| `approval_rule_id` | `bigint` | No | FK |  | Rule applied |
+| `approval_level` | `integer` | Yes |  | `1` | Approval sequence |
+| `approver_id` | `bigint` | No | FK |  | Human approver |
+| `approval_source` | `varchar(20)` | Yes |  | `USER` | User or system approval |
+| `decision` | `varchar(30)` | Yes |  | `PENDING` | Approval decision |
+| `po_total_at_decision` | `numeric(18,2)` | Yes |  |  | PO value reviewed |
+| `comments` | `text` | No |  |  | Decision comments |
+| `assigned_at` | `timestamptz` | Yes |  | `current_timestamp` | Assignment timestamp |
+| `decided_at` | `timestamptz` | No |  |  | Decision timestamp |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Record creation timestamp |
+
+### Foreign Keys
+
+- `purchase_order_id` → `purchase_orders.purchase_order_id`
+- `approval_rule_id` → `approval_rules.approval_rule_id`
+- `approver_id` → `users.user_id`
+
+### Allowed Approval Sources
+
+```text
+SYSTEM
+USER
+```
+
+### Allowed Decisions
+
+```text
+PENDING
+APPROVED
+REJECTED
+RETURNED_FOR_AMENDMENT
+CANCELLED
+```
+
+### Constraints
+
+- `approval_level` must be greater than zero.
+- `po_total_at_decision` must be zero or greater.
+- `approver_id` is required when `approval_source = USER`.
+- `approver_id` must be null when the record represents system auto-approval.
+- A user cannot approve a Purchase Order they created.
+- Comments are mandatory for:
+  - `REJECTED`
+  - `RETURNED_FOR_AMENDMENT`
+- `decided_at` is mandatory when the decision is no longer `PENDING`.
+- An approved order amended materially must receive a new approval record.
+
+### Indexes
+
+- Index on `purchase_order_id`
+- Index on `approver_id`
+- Index on `decision`
+- Index on `approval_source`
+- Composite index on `purchase_order_id`, `approval_level`
+
+---
+
+# 9. Status History Tables
+
+## 9.1 `purchase_requisition_status_history`
+
+### Purpose
+
+Stores every status transition for a Purchase Requisition.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_requisition_status_history_id` | `bigint` | Yes | PK | Identity | Unique history record |
+| `purchase_requisition_id` | `bigint` | Yes | FK |  | Related requisition |
+| `previous_status` | `varchar(30)` | No |  |  | Previous status |
+| `new_status` | `varchar(30)` | Yes |  |  | New status |
+| `action` | `varchar(50)` | Yes |  |  | Action that caused the transition |
+| `comments` | `text` | No |  |  | Reason or comments |
+| `changed_by` | `bigint` | Yes | FK |  | User responsible for the change |
+| `changed_at` | `timestamptz` | Yes |  | `current_timestamp` | Transition timestamp |
+
+### Foreign Keys
+
+- `purchase_requisition_id` → `purchase_requisitions.purchase_requisition_id`
+- `changed_by` → `users.user_id`
+
+### Constraints
+
+- `new_status` is mandatory.
+- A reason is mandatory for rejection, return or cancellation actions.
+- History records must not be updated or deleted by standard users.
+- Status changes and status-history records must be committed in the same database transaction.
+
+### Indexes
+
+- Index on `purchase_requisition_id`
+- Index on `new_status`
+- Index on `changed_by`
+- Index on `changed_at`
+
+---
+
+## 9.2 `purchase_order_status_history`
+
+### Purpose
+
+Stores every status transition for a Purchase Order.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `purchase_order_status_history_id` | `bigint` | Yes | PK | Identity | Unique history record |
+| `purchase_order_id` | `bigint` | Yes | FK |  | Related Purchase Order |
+| `revision_number` | `integer` | Yes |  | `0` | PO revision at transition time |
+| `previous_status` | `varchar(30)` | No |  |  | Previous status |
+| `new_status` | `varchar(30)` | Yes |  |  | New status |
+| `action` | `varchar(50)` | Yes |  |  | Action causing transition |
+| `comments` | `text` | No |  |  | Reason or comments |
+| `changed_by` | `bigint` | Yes | FK |  | User responsible for the action |
+| `changed_at` | `timestamptz` | Yes |  | `current_timestamp` | Transition timestamp |
+
+### Foreign Keys
+
+- `purchase_order_id` → `purchase_orders.purchase_order_id`
+- `changed_by` → `users.user_id`
+
+### Constraints
+
+- `revision_number` must be zero or greater.
+- `new_status` is mandatory.
+- A reason is mandatory for:
+  - rejection
+  - return for amendment
+  - hold
+  - cancellation
+- Status changes and history insertion must occur in the same database transaction.
+- Standard users must not update or delete status-history records.
+
+### Indexes
+
+- Index on `purchase_order_id`
+- Index on `revision_number`
+- Index on `new_status`
+- Index on `changed_by`
+- Index on `changed_at`
+- Composite index on `purchase_order_id`, `changed_at`
+
+---
+
+# 10. Notification Table
+
+## 10.1 `notifications`
+
+### Purpose
+
+Stores in-application workflow notifications and delivery status.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `notification_id` | `bigint` | Yes | PK | Identity | Unique notification identifier |
+| `recipient_user_id` | `bigint` | Yes | FK |  | User receiving the notification |
+| `notification_type` | `varchar(50)` | Yes |  |  | Notification classification |
+| `title` | `varchar(200)` | Yes |  |  | Notification title |
+| `message` | `text` | Yes |  |  | Notification content |
+| `related_entity_type` | `varchar(50)` | No |  |  | Related business entity |
+| `related_entity_id` | `bigint` | No |  |  | Related record identifier |
+| `delivery_channel` | `varchar(20)` | Yes |  | `IN_APP` | Notification channel |
+| `status` | `varchar(20)` | Yes |  | `PENDING` | Delivery status |
+| `read_at` | `timestamptz` | No |  |  | Time the user read it |
+| `sent_at` | `timestamptz` | No |  |  | Delivery timestamp |
+| `failure_reason` | `text` | No |  |  | Error details when delivery fails |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Creation timestamp |
+
+### Foreign Keys
+
+- `recipient_user_id` → `users.user_id`
+
+### Allowed Delivery Channels
+
+```text
+IN_APP
+EMAIL
+```
+
+Email may be introduced after the initial in-application notification implementation.
+
+### Allowed Statuses
+
+```text
+PENDING
+SENT
+FAILED
+READ
+```
+
+### Constraints
+
+- `title` and `message` are mandatory.
+- `failure_reason` is required when `status = FAILED`.
+- `read_at` should be populated when `status = READ`.
+- Notifications should not be permanently deleted if they form part of workflow evidence.
+
+### Indexes
+
+- Index on `recipient_user_id`
+- Index on `status`
+- Index on `notification_type`
+- Index on `created_at`
+- Composite index on `recipient_user_id`, `status`
+
+### Design Note
+
+`related_entity_type + related_entity_id` is used only as a navigation reference for notifications.
+
+It is not treated as the authoritative relationship for approvals or status history.
+
+Approvals and status histories use separate tables with enforceable foreign keys.
+
+---
+
+# 11. Audit Table
+
+## 11.1 `audit_logs`
+
+### Purpose
+
+Stores immutable records of significant system and business-data changes.
+
+| Column | PostgreSQL Type | Required | Key | Default | Description |
+|---|---|---:|---|---|---|
+| `audit_log_id` | `bigint` | Yes | PK | Identity | Unique audit identifier |
+| `user_id` | `bigint` | No | FK |  | User responsible for the action |
+| `entity_type` | `varchar(50)` | Yes |  |  | Type of entity changed |
+| `entity_id` | `bigint` | Yes |  |  | Identifier of changed record |
+| `action` | `varchar(50)` | Yes |  |  | Action performed |
+| `previous_values` | `jsonb` | No |  |  | Values before the action |
+| `new_values` | `jsonb` | No |  |  | Values after the action |
+| `reason` | `text` | No |  |  | Business reason where applicable |
+| `request_id` | `uuid` | No |  |  | API request correlation identifier |
+| `ip_address` | `inet` | No |  |  | Source IP address |
+| `created_at` | `timestamptz` | Yes |  | `current_timestamp` | Audit timestamp |
+
+### Foreign Keys
+
+- `user_id` → `users.user_id`
+
+`user_id` may be null for valid system-generated actions.
+
+### Example Actions
+
+```text
+CREATE
+UPDATE
+SUBMIT
+APPROVE
+REJECT
+RETURN_FOR_AMENDMENT
+RESUBMIT
+AUTO_APPROVE
+HOLD
+RELEASE
+AMEND
+CANCEL
+SEND_TO_SUPPLIER
+STATUS_CHANGE
+LOGIN
+ROLE_ASSIGNMENT
+```
+
+### Constraints
+
+- `entity_type`, `entity_id` and `action` are mandatory.
+- Audit records must be append-only.
+- Standard application users must not update or delete audit records.
+- Sensitive values such as passwords and authentication tokens must never be stored.
+- System-generated actions must be identifiable when `user_id` is null.
+
+### Indexes
+
+- Index on `user_id`
+- Index on `entity_type`
+- Index on `entity_id`
+- Index on `action`
+- Index on `created_at`
+- Index on `request_id`
+- Composite index on `entity_type`, `entity_id`, `created_at`
+
+---
+
+# 12. Relationship Summary
+
+| Parent Table | Child Table | Relationship |
+|---|---|---|
+| `users` | `user_roles` | One user may have many role assignments |
+| `roles` | `user_roles` | One role may be assigned to many users |
+| `suppliers` | `supplier_contacts` | One supplier may have many contacts |
+| `suppliers` | `supplier_items` | One supplier may supply many items |
+| `catalogue_items` | `supplier_items` | One item may be supplied by many suppliers |
+| `purchase_requisitions` | `purchase_requisition_items` | One requisition contains many lines |
+| `purchase_requisitions` | `purchase_orders` | One requisition may generate one or more POs |
+| `purchase_orders` | `purchase_order_items` | One PO contains many lines |
+| `purchase_requisitions` | `purchase_requisition_approvals` | One requisition may have many approval records |
+| `purchase_orders` | `purchase_order_approvals` | One PO may have many approval records |
+| `purchase_requisitions` | `purchase_requisition_status_history` | One requisition has many status-history records |
+| `purchase_orders` | `purchase_order_status_history` | One PO has many status-history records |
+| `users` | `notifications` | One user may receive many notifications |
+| `users` | `audit_logs` | One user may generate many audit records |
+
+---
+
+# 13. Workflow Design Decision
+
+The ERD initially proposed generic workflow tables using:
+
+```text
+document_type + document_id
+```
+
+The detailed PostgreSQL schema uses separate tables:
+
+```text
+purchase_requisition_approvals
+purchase_order_approvals
+
+purchase_requisition_status_history
+purchase_order_status_history
+```
+
+This design was selected because it provides:
+
+- Enforceable PostgreSQL foreign keys
+- Stronger referential integrity
+- Simpler queries
+- Clearer API models
+- Easier automated testing
+- Reduced risk of orphaned workflow records
+
+A generic workflow engine may be considered in a later phase when NEXORA supports many additional document types.
+
+---
+
+# 14. Phase 1 Database Exclusions
+
+The following tables will be introduced in later phases:
+
+```text
+warehouses
+storage_locations
+inventory_balances
+goods_receipts
+goods_receipt_items
+inventory_batches
+quality_inspections
+quarantine_records
+supplier_invoices
+supplier_invoice_items
+matching_results
+matching_exceptions
+accounting_connections
+accounting_exports
+payments
+general_ledger_postings
+```
