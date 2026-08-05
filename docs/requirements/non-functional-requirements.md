@@ -1,236 +1,346 @@
 # Procurement Non-Functional Requirements
 
-## 1. Purpose
+# 1. Purpose
 
-This document defines the non-functional requirements for the NexusERP Procurement Management MVP.
+This document defines the non-functional requirements for the NEXORA Procurement Management module.
 
-These requirements describe how the system should perform, remain secure, support users, and maintain reliable operation.
+These requirements describe the quality attributes required to support supplier management, item catalogue management, supplier-item relationships, purchase requisitions, purchase orders, direct purchase orders, approval workflows, notifications and audit history for a food manufacturing organisation.
 
 ---
 
-## 2. Security
+# 2. Security
 
-### NFR-SEC-001 — Secure Authentication
+## NFR-SEC-001 — Secure Authentication
 
 The system shall securely authenticate users before allowing access to protected functions.
 
-### NFR-SEC-002 — Password Protection
+---
 
-Passwords shall not be stored as plain text and must be securely hashed.
+## NFR-SEC-002 — Password Protection
 
-### NFR-SEC-003 — Role-Based Access Control
+Passwords shall not be stored as plain text and shall be securely hashed.
+
+---
+
+## NFR-SEC-003 — Role-Based Access Control
 
 The system shall enforce permissions based on the authenticated user's assigned role.
 
-### NFR-SEC-004 — Session Security
+---
+
+## NFR-SEC-004 — Session Security
 
 User sessions shall expire after a defined period of inactivity.
 
-### NFR-SEC-005 — Sensitive Information
+---
 
-Sensitive information shall not be exposed in application logs, error messages, or API responses.
+## NFR-SEC-005 — Sensitive Information Protection
 
-### NFR-SEC-006 — Input Validation
+Sensitive information shall not be exposed in application logs, API responses or error messages.
 
-The system shall validate and sanitise user input to reduce security risks.
+---
 
-### NFR-SEC-007 — Transport Security
+## NFR-SEC-006 — Input Validation
+
+The system shall validate and sanitise all user input.
+
+---
+
+## NFR-SEC-007 — Secure Communication
 
 Production communication between users and the application shall use HTTPS.
 
-### NFR-SEC-008 — Auditability
+---
 
-Security-sensitive actions shall be recorded with the user, date, time, and action performed.
+## NFR-SEC-008 — Auditability
+
+Security-sensitive actions shall be recorded with the user, date, time and action performed.
 
 ---
 
-## 3. Performance
+# 3. Performance
 
-### NFR-PERF-001 — Page Response Time
+## NFR-PERF-001 — Page Response Time
 
 Common application pages should load within three seconds under normal operating conditions.
 
-### NFR-PERF-002 — API Response Time
+---
+
+## NFR-PERF-002 — API Response Time
 
 Standard API requests should return within two seconds under normal operating conditions.
 
-### NFR-PERF-003 — Search Performance
+---
 
-Supplier and purchase-order searches should return results within three seconds.
+## NFR-PERF-003 — Search Performance
 
-### NFR-PERF-004 — Concurrent Users
-
-The MVP should support at least 50 concurrent users without significant performance degradation.
-
-### NFR-PERF-005 — Bulk Data
-
-The purchase-order list should support pagination to prevent unnecessary loading of large datasets.
+Search operations for suppliers, catalogue items, requisitions and purchase orders should return results within three seconds.
 
 ---
 
-## 4. Reliability
+## NFR-PERF-004 — Concurrent Users
 
-### NFR-REL-001 — Data Integrity
-
-The system shall prevent incomplete or invalid transactions from being saved as completed business actions.
-
-### NFR-REL-002 — Transaction Consistency
-
-Purchase-order status changes and audit-history records shall be saved as part of the same database transaction.
-
-### NFR-REL-003 — Error Recovery
-
-The system shall display a clear error message when an operation fails without exposing technical details.
-
-### NFR-REL-004 — Data Persistence
-
-Successfully saved supplier and purchase-order data shall remain available after application restart.
-
-### NFR-REL-005 — Failure Protection
-
-The system shall avoid duplicate submissions when users repeat an action due to slow responses.
+Phase 1 shall support at least 50 concurrent users without significant performance degradation.
 
 ---
 
-## 5. Availability
+## NFR-PERF-005 — Pagination
 
-### NFR-AVL-001 — MVP Availability
-
-The deployed demonstration environment should be available when required for testing and portfolio demonstrations.
-
-### NFR-AVL-002 — Planned Maintenance
-
-Planned maintenance activities should be documented when the application reaches a hosted environment.
-
-### NFR-AVL-003 — Health Check
-
-The backend should provide a health-check endpoint for monitoring application availability.
+Large data sets shall support server-side pagination.
 
 ---
 
-## 6. Usability
+## NFR-PERF-006 — Database Performance
 
-### NFR-USA-001 — Consistent Interface
-
-The application shall use a consistent layout, navigation style, terminology, and visual design.
-
-### NFR-USA-002 — Clear Validation Messages
-
-Validation messages shall clearly explain what must be corrected.
-
-### NFR-USA-003 — Confirmation Messages
-
-The system shall display confirmation messages after important actions such as submission, approval, and rejection.
-
-### NFR-USA-004 — Workflow Visibility
-
-Users shall be able to clearly see the current status of a purchase order.
-
-### NFR-USA-005 — Destructive Actions
-
-Actions such as cancellation shall require confirmation before completion.
-
-### NFR-USA-006 — Responsive Design
-
-The interface should remain usable on common desktop and tablet screen sizes.
+Database queries shall use indexing where appropriate to optimise performance.
 
 ---
 
-## 7. Accessibility
+# 4. Reliability
 
-### NFR-ACC-001 — Keyboard Access
+## NFR-REL-001 — Data Integrity
+
+The system shall prevent incomplete or invalid transactions from being saved.
+
+---
+
+## NFR-REL-002 — Transaction Consistency
+
+Business transactions and audit records shall be committed within the same database transaction.
+
+---
+
+## NFR-REL-003 — Error Recovery
+
+The system shall display meaningful error messages without exposing technical implementation details.
+
+---
+
+## NFR-REL-004 — Data Persistence
+
+Successfully saved data shall remain available after application restart.
+
+---
+
+## NFR-REL-005 — Duplicate Submission Protection
+
+The system shall prevent duplicate submissions caused by repeated user actions.
+
+---
+
+# 5. Availability
+
+## NFR-AVL-001 — System Availability
+
+The demonstration environment should be available whenever required for development, testing and portfolio demonstrations.
+
+---
+
+## NFR-AVL-002 — Planned Maintenance
+
+Planned maintenance shall be documented before deployment.
+
+---
+
+## NFR-AVL-003 — Health Monitoring
+
+The backend shall provide a Health Check endpoint for monitoring application availability.
+
+---
+
+# 6. Usability
+
+## NFR-USA-001 — Consistent User Interface
+
+The application shall maintain consistent layouts, navigation, terminology and design.
+
+---
+
+## NFR-USA-002 — Validation Messages
+
+Validation messages shall clearly explain the required corrective action.
+
+---
+
+## NFR-USA-003 — Confirmation Messages
+
+The system shall display confirmation messages after successful business actions.
+
+---
+
+## NFR-USA-004 — Workflow Visibility
+
+Users shall always be able to identify the current status of procurement documents.
+
+---
+
+## NFR-USA-005 — Confirmation for Destructive Actions
+
+Cancellation and other destructive actions shall require user confirmation.
+
+---
+
+## NFR-USA-006 — Responsive Design
+
+The application shall remain usable on common desktop and tablet screen sizes.
+
+---
+
+# 7. Accessibility
+
+## NFR-ACC-001 — Keyboard Accessibility
 
 Core application functions shall be accessible using a keyboard.
 
-### NFR-ACC-002 — Form Labels
+---
 
-All form fields shall have clear and accessible labels.
+## NFR-ACC-002 — Accessible Labels
 
-### NFR-ACC-003 — Colour Independence
+All form fields shall have clear labels.
 
-Important information shall not be communicated using colour alone.
+---
 
-### NFR-ACC-004 — Focus Visibility
+## NFR-ACC-003 — Colour Independence
+
+Important information shall not rely solely on colour.
+
+---
+
+## NFR-ACC-004 — Keyboard Focus
 
 Interactive elements shall provide visible keyboard focus.
 
-### NFR-ACC-005 — Accessibility Target
+---
 
-The application should aim to meet WCAG 2.1 Level AA principles for relevant MVP screens.
+## NFR-ACC-005 — Accessibility Standard
+
+The application should aim to comply with WCAG 2.1 Level AA principles.
 
 ---
 
-## 8. Maintainability
+# 8. Maintainability
 
-### NFR-MNT-001 — Modular Design
+## NFR-MNT-001 — Modular Architecture
 
-The application shall use a modular structure to separate business logic, data access, APIs, and user-interface components.
-
-### NFR-MNT-002 — Coding Standards
-
-The project shall use consistent naming conventions, formatting, and code-quality rules.
-
-### NFR-MNT-003 — Documentation
-
-Important components, APIs, setup instructions, and architectural decisions shall be documented.
-
-### NFR-MNT-004 — Automated Testing
-
-Critical business rules and workflows shall be covered by automated tests.
-
-### NFR-MNT-005 — Configuration Management
-
-Environment-specific settings shall be managed through configuration and environment variables.
-
-### NFR-MNT-006 — Dependency Management
-
-Application dependencies shall be recorded and version-controlled.
+The application shall separate business logic, APIs, database access and user interface components.
 
 ---
 
-## 9. Scalability
+## NFR-MNT-002 — Coding Standards
 
-### NFR-SCL-001 — Module Expansion
-
-The architecture shall support the future addition of Inventory, Warehouse, Finance, Sales, and Reporting modules.
-
-### NFR-SCL-002 — Service Expansion
-
-The backend shall support additional APIs without requiring major redesign of existing features.
-
-### NFR-SCL-003 — Database Growth
-
-The database design shall support increasing supplier, purchase-order, and audit-history volumes.
+The project shall follow consistent naming conventions, formatting standards and code quality rules.
 
 ---
 
-## 10. Logging and Monitoring
+## NFR-MNT-003 — Documentation
 
-### NFR-LOG-001 — Application Logging
+Architecture, APIs, setup instructions and important technical decisions shall be documented.
+
+---
+
+## NFR-MNT-004 — Automated Testing
+
+Critical business workflows shall be covered by automated tests.
+
+---
+
+## NFR-MNT-005 — Configuration Management
+
+Environment-specific configuration shall be managed using environment variables.
+
+---
+
+## NFR-MNT-006 — Dependency Management
+
+Project dependencies shall be version controlled and documented.
+
+---
+# 9. Scalability
+
+## NFR-SCL-001 — Modular Architecture
+
+The architecture shall support the future addition of ERP modules without major redesign.
+
+---
+
+## NFR-SCL-002 — Future ERP Modules
+
+The architecture shall support future modules including:
+
+- Inventory Management
+- Warehouse Management
+- Production Planning
+- Manufacturing
+- Quality Management
+- Sales Management
+- Finance
+- Reporting
+- AI Services
+
+---
+
+## NFR-SCL-003 — API Expansion
+
+The backend shall support additional REST APIs without affecting existing services.
+
+---
+
+## NFR-SCL-004 — Database Growth
+
+The database shall support increasing volumes of:
+
+- Suppliers
+- Catalogue Items
+- Supplier-Item Relationships
+- Purchase Requisitions
+- Purchase Orders
+- Audit Records
+- Future ERP Transactions
+
+---
+
+# 10. Logging and Monitoring
+
+## NFR-LOG-001 — Application Logging
 
 The system shall log important application events and failures.
 
-### NFR-LOG-002 — Structured Logs
+---
 
-Backend logs should use a consistent and searchable structure.
+## NFR-LOG-002 — Structured Logging
 
-### NFR-LOG-003 — Traceability
-
-Logs should include sufficient identifiers, such as purchase-order number and request identifier, where appropriate.
-
-### NFR-LOG-004 — Sensitive Data Protection
-
-Passwords, authentication tokens, and sensitive user information shall not be written to logs.
-
-### NFR-LOG-005 — Monitoring Readiness
-
-The architecture shall support future integration with monitoring and observability tools.
+Application logs shall use a consistent and searchable format.
 
 ---
 
-## 11. Compatibility
+## NFR-LOG-003 — Traceability
 
-### NFR-COM-001 — Browser Support
+Logs shall include sufficient identifiers such as:
+
+- User
+- Request Identifier
+- Purchase Requisition Number
+- Purchase Order Number
+
+where applicable.
+
+---
+
+## NFR-LOG-004 — Sensitive Data Protection
+
+Passwords, authentication tokens and confidential information shall never be written to application logs.
+
+---
+
+## NFR-LOG-005 — Monitoring Readiness
+
+The architecture shall support future integration with monitoring and observability platforms.
+
+---
+
+# 11. Compatibility
+
+## NFR-COM-001 — Browser Compatibility
 
 The application shall support the latest stable versions of:
 
@@ -238,76 +348,121 @@ The application shall support the latest stable versions of:
 - Microsoft Edge
 - Mozilla Firefox
 
-### NFR-COM-002 — API Format
+---
 
-REST API requests and responses shall use JSON unless another format is specifically required.
+## NFR-COM-002 — API Format
 
-### NFR-COM-003 — Database Compatibility
-
-The backend shall use PostgreSQL as the primary relational database.
+REST APIs shall use JSON for requests and responses unless another format is explicitly required.
 
 ---
 
-## 12. Testability
+## NFR-COM-003 — Database Platform
 
-### NFR-TST-001 — Stable Selectors
+The primary relational database shall be PostgreSQL.
 
-Important user-interface elements shall provide stable identifiers for automated testing.
+---
 
-### NFR-TST-002 — Test Data Support
+## NFR-COM-004 — Backend Framework
 
-The system shall support predictable test-data creation and cleanup.
+Backend services shall be developed using FastAPI.
 
-### NFR-TST-003 — API Documentation
+---
+
+## NFR-COM-005 — Frontend Framework
+
+The user interface shall be developed using React and TypeScript.
+
+---
+
+# 12. Testability
+
+## NFR-TST-001 — Stable UI Selectors
+
+Important user interface elements shall expose stable identifiers for automated testing.
+
+---
+
+## NFR-TST-002 — Test Data
+
+The system shall support predictable creation and cleanup of test data.
+
+---
+
+## NFR-TST-003 — API Documentation
 
 Backend APIs shall provide accessible documentation for development and testing.
 
-### NFR-TST-004 — Environment Separation
+---
 
-Development and test environments shall use separate configuration and data.
+## NFR-TST-004 — Environment Separation
 
-### NFR-TST-005 — Observable Failures
-
-Application failures shall provide enough information for diagnosis without exposing sensitive implementation details.
+Development, Test and Production environments shall use separate configurations and data.
 
 ---
 
-## 13. AI Quality Requirements
+## NFR-TST-005 — Observable Failures
 
-### NFR-AI-001 — Human Validation
-
-AI-generated recommendations shall require human review before being treated as approved project decisions.
-
-### NFR-AI-002 — AI Traceability
-
-The system shall record the prompt, model output, review result, and reviewer where AI-generated quality artefacts are stored.
-
-### NFR-AI-003 — AI Confidence
-
-AI-generated recommendations should include a confidence indicator when technically feasible.
-
-### NFR-AI-004 — AI Data Protection
-
-Sensitive production information shall not be submitted to an external AI service without appropriate controls.
-
-### NFR-AI-005 — AI Failure Handling
-
-The core procurement workflow shall continue to operate when optional AI services are unavailable.
+Application failures shall provide sufficient diagnostic information without exposing sensitive implementation details.
 
 ---
 
-## 14. Future Non-Functional Requirements
+# 13. AI Quality Requirements
 
-Future phases may introduce:
+## NFR-AI-001 — Human Validation
 
-- Formal uptime targets
-- Disaster recovery
-- Automated backups
-- Horizontal scaling
-- Cloud deployment
-- Centralised observability
-- Security scanning
-- Penetration testing
-- Performance baselines
-- Data-retention policies
-- Regulatory compliance controls
+AI-generated recommendations shall require human review before implementation.
+
+---
+
+## NFR-AI-002 — AI Traceability
+
+Where AI-generated outputs are stored, the system shall record:
+
+- Prompt
+- AI Response
+- Reviewer
+- Review Outcome
+- Review Date
+
+---
+
+## NFR-AI-003 — AI Availability
+
+Core procurement workflows shall continue operating when AI services are unavailable.
+
+---
+
+## NFR-AI-004 — AI Data Protection
+
+Sensitive procurement information shall not be submitted to external AI services without appropriate security controls.
+
+---
+
+## NFR-AI-005 — Future AI Integration
+
+The architecture shall support future integration with:
+
+- Retrieval-Augmented Generation (RAG)
+- LangGraph
+- Model Context Protocol (MCP)
+- ChromaDB
+- AI Agents
+
+---
+
+# 14. Future Quality Improvements
+
+Future releases may introduce:
+
+- Disaster Recovery
+- Automated Backups
+- High Availability
+- Cloud Deployment
+- Kubernetes
+- Centralised Monitoring
+- Security Scanning
+- Penetration Testing
+- Performance Benchmarking
+- Data Retention Policies
+- Regulatory Compliance
+- AI Performance Monitoring
