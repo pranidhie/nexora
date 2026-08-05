@@ -1,39 +1,52 @@
-# NexusERP Solutions
+# NEXORA Solutions
 
 ## Company Overview
 
-NexusERP Solutions is a fictional enterprise software company specialising in ERP solutions for manufacturing, supply chain, and distribution organisations.
+NEXORA Solutions is a fictional enterprise software company that develops AI-powered Enterprise Resource Planning (ERP) solutions for the food manufacturing and distribution industry.
 
-The purpose of NexusERP is to demonstrate how modern Enterprise Quality Engineering can be integrated throughout the complete Software Development Lifecycle (SDLC) and Software Testing Lifecycle (STLC).
+The NEXORA platform is designed to integrate business operations into a single intelligent system, helping organisations manage procurement, inventory, manufacturing, warehousing, sales, finance, and quality management while leveraging Artificial Intelligence to improve decision-making and Enterprise Quality Engineering.
+
+The platform is also being developed as a practical implementation project for the **QA in the AI Era** series, demonstrating enterprise software architecture, AI technologies, and modern Quality Engineering practices.
 
 ---
 
 ## Industry
 
-- Manufacturing
+- Food Manufacturing
+- Food Distribution
 - Supply Chain
-- Distribution
+- Warehouse Operations
 
 ---
 
 ## Vision
 
-To build intelligent ERP solutions that combine enterprise software engineering with AI-powered Quality Engineering.
+To build an intelligent, AI-powered ERP platform that transforms enterprise operations through automation, data-driven decision-making, and modern Quality Engineering.
 
 ---
 
-## Core Modules
+## Mission
+
+To provide a scalable, enterprise-grade ERP solution that streamlines business processes across procurement, inventory, manufacturing, warehousing, sales, finance, and quality management.
+
+---
+
+## Core ERP Modules
 
 - Procurement Management
 - Supplier Management
 - Inventory Management
 - Warehouse Management
-- Finance
-- Sales
-- Reporting
+- Production Planning
+- Manufacturing
+- Quality Management
+- Sales Management
+- Finance & Accounting
+- Reporting & Analytics
+- AI Assistant & Decision Support
 
 ---
 
 ## Current Development Focus
 
-Procurement Management Module
+The first implementation phase focuses on the Procurement Management module. Additional ERP modules will be developed in future phases as the NEXORA platform evolves into a complete enterprise solution.
