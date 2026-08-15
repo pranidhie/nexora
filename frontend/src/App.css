@@ -1,0 +1,655 @@
+:root {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: #eaf5ff;
+  background: #050b16;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(420px, 0.9fr);
+  background:
+    radial-gradient(circle at 20% 20%, #0a4a704d, transparent 38%),
+    #050b16;
+}
+
+.brand-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 72px clamp(40px, 7vw, 112px);
+  overflow: hidden;
+  border-right: 1px solid #17334a;
+}
+
+.brand-panel::before,
+.brand-panel::after {
+  position: absolute;
+  content: "";
+  border-radius: 50%;
+  border: 1px solid #13c8ff26;
+}
+
+.brand-panel::before {
+  width: 520px;
+  height: 520px;
+  right: -220px;
+  top: -160px;
+}
+
+.brand-panel::after {
+  width: 320px;
+  height: 320px;
+  left: -180px;
+  bottom: -120px;
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+}
+
+.brand-mark {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 30px;
+  border: 1px solid #1dd2ff;
+  border-radius: 16px;
+  color: #04101c;
+  background: linear-gradient(135deg, #79ecff, #04a8f4);
+  box-shadow: 0 0 38px #00bfff4d;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: #59dfff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.brand-content h1 {
+  margin: 0;
+  color: #f7fbff;
+  font-size: clamp(58px, 8vw, 104px);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.brand-content h2 {
+  max-width: 640px;
+  margin: 28px 0 16px;
+  color: #dcecff;
+  font-size: clamp(27px, 3vw, 42px);
+  line-height: 1.16;
+  letter-spacing: -0.035em;
+}
+
+.brand-description {
+  max-width: 610px;
+  margin: 0;
+  color: #8eabc4;
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.feature-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 38px;
+}
+
+.feature-list span {
+  padding: 10px 14px;
+  border: 1px solid #1b4962;
+  border-radius: 999px;
+  color: #b5d7ea;
+  background: #091827b3;
+  font-size: 13px;
+}
+
+.form-panel {
+  display: grid;
+  place-items: center;
+  padding: 48px;
+  background:
+    radial-gradient(circle at 100% 0%, #0b6d9540, transparent 35%),
+    #07101d;
+}
+
+.login-card {
+  width: min(100%, 460px);
+  padding: 44px;
+  border: 1px solid #1a3850;
+  border-radius: 24px;
+  background: #091524e8;
+  box-shadow: 0 28px 80px #0009;
+  backdrop-filter: blur(14px);
+}
+
+.login-card h2 {
+  margin: 0;
+  color: #f4f9ff;
+  font-size: 38px;
+  letter-spacing: -0.04em;
+}
+
+.form-intro {
+  margin: 12px 0 32px;
+  color: #8ca7bc;
+  line-height: 1.6;
+}
+
+.login-card label {
+  display: block;
+  margin: 19px 0 8px;
+  color: #c2d9e9;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.login-card input {
+  width: 100%;
+  height: 52px;
+  padding: 0 15px;
+  border: 1px solid #28485e;
+  border-radius: 11px;
+  outline: none;
+  color: #edf8ff;
+  background: #050e19;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.login-card input::placeholder {
+  color: #577083;
+}
+
+.login-card input:focus {
+  border-color: #20cfff;
+  box-shadow: 0 0 0 3px #16c8ff1f;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 72px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+  padding: 5px;
+  border: 0;
+  color: #52d9fa;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.error-message {
+  margin: 16px 0 0;
+  padding: 11px 13px;
+  border: 1px solid #ff6d7e55;
+  border-radius: 9px;
+  color: #ffb4bd;
+  background: #50131c52;
+  font-size: 14px;
+}
+
+.submit-button,
+.welcome-card button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 11px;
+  color: #03101a;
+  background: linear-gradient(135deg, #65e6ff, #08aeea);
+  box-shadow: 0 12px 32px #00bfff2e;
+  font-weight: 850;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.submit-button:hover:not(:disabled),
+.welcome-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 38px #00bfff42;
+}
+
+.submit-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.security-note {
+  margin: 21px 0 0;
+  color: #5f798c;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.dashboard {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  background:
+    radial-gradient(circle at 50% 15%, #07557c6b, transparent 37%),
+    #050b16;
+}
+
+.welcome-card {
+  width: min(100%, 650px);
+  padding: 54px;
+  border: 1px solid #1c455f;
+  border-radius: 24px;
+  background: #081523e8;
+  box-shadow: 0 28px 80px #0009;
+  text-align: center;
+}
+
+.welcome-card .brand-mark {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.welcome-card h1 {
+  margin: 8px 0 15px;
+  color: #f4f9ff;
+  font-size: clamp(34px, 6vw, 50px);
+  letter-spacing: -0.05em;
+}
+
+.welcome-card > p:not(.eyebrow) {
+  color: #91adc0;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-panel {
+    min-height: auto;
+    padding: 60px 28px;
+    border-right: 0;
+    border-bottom: 1px solid #17334a;
+  }
+
+  .brand-content h1 {
+    font-size: 58px;
+  }
+
+  .form-panel {
+    padding: 42px 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .login-card,
+  .welcome-card {
+    padding: 30px 22px;
+  }
+
+  .brand-content h2 {
+    font-size: 27px;
+  }
+}
+.brand-panel,
+.form-panel {
+  min-width: 0;
+}
+
+.login-card {
+  text-align: left;
+}
+
+.login-card .eyebrow,
+.login-card h2,
+.login-card .form-intro {
+  text-align: left;
+}
+
+.login-card label {
+  text-align: left;
+}
+
+.welcome-card h1 {
+  max-width: 540px;
+  margin-right: auto;
+  margin-left: auto;
+  line-height: 1.08;
+  overflow-wrap: break-word;
+}
+
+.welcome-card > p:not(.eyebrow) {
+  max-width: 520px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 901px) {
+  .login-page {
+    grid-template-columns: minmax(520px, 1.12fr) minmax(440px, 0.88fr);
+  }
+
+  .brand-content {
+    text-align: left;
+  }
+
+  .brand-content .brand-mark {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .feature-list {
+    justify-content: flex-start;
+  }
+}
+/* NEXORA UI refinement */
+
+.login-page {
+  grid-template-columns: minmax(560px, 1.08fr) minmax(460px, 0.92fr);
+}
+
+.brand-panel {
+  padding: 64px clamp(56px, 6vw, 96px);
+}
+
+.brand-content {
+  width: 100%;
+  max-width: 720px;
+}
+
+.brand-content h1 {
+  font-size: clamp(58px, 6vw, 84px);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.brand-content h2 {
+  max-width: 680px;
+  margin-top: 26px;
+  font-size: clamp(30px, 2.7vw, 42px);
+  line-height: 1.16;
+}
+
+.brand-description {
+  max-width: 620px;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.feature-list {
+  margin-top: 32px;
+}
+
+.form-panel {
+  padding: 40px clamp(32px, 4vw, 64px);
+}
+
+.login-card {
+  width: min(100%, 460px);
+  padding: 40px 42px 36px;
+  border-color: #1d415a;
+  border-radius: 22px;
+}
+
+.login-card h2 {
+  font-size: 36px;
+  line-height: 1.15;
+}
+
+.form-intro {
+  margin: 12px 0 28px;
+}
+
+.login-card label {
+  margin-top: 18px;
+  font-size: 13px;
+}
+
+.login-card input {
+  height: 54px;
+  border-color: #2a5069;
+  border-radius: 10px;
+}
+
+.submit-button {
+  min-height: 54px;
+  margin-top: 22px;
+  border-radius: 10px;
+}
+
+.security-note {
+  max-width: 320px;
+  margin: 19px auto 0;
+  line-height: 1.45;
+}
+
+.welcome-card {
+  width: min(100%, 680px);
+  padding: 52px 54px;
+  border-radius: 22px;
+}
+
+.welcome-card h1 {
+  max-width: 590px;
+  font-size: clamp(38px, 5vw, 52px);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.welcome-card > p:not(.eyebrow) {
+  max-width: 540px;
+  margin-top: 18px;
+  line-height: 1.65;
+}
+
+.welcome-card button {
+  max-width: 540px;
+}
+
+/* Clear, consistent interaction styling */
+
+.login-card input:hover {
+  border-color: #39708e;
+}
+
+.login-card input:focus {
+  border-color: #42d9ff;
+  box-shadow: 0 0 0 3px #1fc8ff22;
+}
+
+.submit-button,
+.password-toggle,
+.welcome-card button {
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.submit-button:active:not(:disabled),
+.welcome-card button:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 1100px) and (min-width: 901px) {
+  .login-page {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brand-panel {
+    padding: 52px 42px;
+  }
+
+  .brand-content h1 {
+    font-size: 64px;
+  }
+
+  .brand-content h2 {
+    font-size: 34px;
+  }
+
+  .form-panel {
+    padding: 36px 28px;
+  }
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-panel {
+    padding: 48px 28px;
+  }
+
+  .brand-content {
+    max-width: 680px;
+  }
+
+  .brand-content h1 {
+    font-size: clamp(50px, 14vw, 68px);
+  }
+
+  .brand-content h2 {
+    font-size: clamp(27px, 7vw, 36px);
+  }
+
+  .form-panel {
+    padding: 44px 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .brand-panel {
+    padding: 40px 22px;
+  }
+
+  .feature-list {
+    gap: 8px;
+  }
+
+  .feature-list span {
+    padding: 8px 11px;
+    font-size: 12px;
+  }
+
+  .login-card {
+    padding: 32px 24px 28px;
+    border-radius: 18px;
+  }
+
+  .login-card h2 {
+    font-size: 32px;
+  }
+
+  .welcome-card {
+    padding: 38px 24px;
+  }
+}
+/* Final NEXORA logo lockup correction */
+
+.brand-content > .nexora-logo {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 38px;
+}
+
+.brand-content .nexora-logo-symbol {
+  width: 72px;
+  height: 72px;
+}
+
+.brand-content .nexora-wordmark {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 260px;
+}
+
+.brand-content .nexora-wordmark strong {
+  display: block;
+  margin: 0;
+  color: #f4faff;
+  font-size: 31px;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: 0.15em;
+}
+
+.brand-content .nexora-wordmark span {
+  display: block;
+  margin: 0;
+  color: #70a9c2;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 520px) {
+  .brand-content .nexora-logo-symbol {
+    width: 60px;
+    height: 60px;
+  }
+
+  .brand-content .nexora-wordmark {
+    min-width: 0;
+  }
+
+  .brand-content .nexora-wordmark strong {
+    font-size: 24px;
+  }
+
+  .brand-content .nexora-wordmark span {
+    max-width: 210px;
+    font-size: 9px;
+  }
+}
