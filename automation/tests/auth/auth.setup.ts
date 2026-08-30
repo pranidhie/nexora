@@ -1,45 +1,170 @@
-import { test as base, expect } from '@playwright/test'
+import {
+  test as setup,
+  expect,
+} from '@playwright/test'
+
 import fs from 'fs'
 import path from 'path'
 
-const sessionStorageFile = path.resolve(
-  'playwright/.auth/admin-session.json',
+const authDir = path.resolve(
+  'playwright/.auth',
 )
 
-type SessionData = {
-  nexora_access_token: string
-  nexora_user: string
+const storageStateFile = path.resolve(
+  authDir,
+  'admin.json',
+)
+
+const sessionStorageFile = path.resolve(
+  authDir,
+  'admin-session.json',
+)
+
+const ADMIN_EMAIL =
+  process.env.NEXORA_ADMIN_EMAIL ??
+  'admin@nexora.com'
+
+const ADMIN_PASSWORD =
+  process.env.NEXORA_ADMIN_PASSWORD
+
+if (!ADMIN_PASSWORD) {
+  throw new Error(
+    'NEXORA_ADMIN_PASSWORD is not configured.',
+  )
 }
 
-export const test = base.extend({
-  page: async ({ page }, use) => {
-    if (!fs.existsSync(sessionStorageFile)) {
+setup(
+  'authenticate NEXORA administrator',
+  async ({ page }) => {
+    fs.mkdirSync(
+      authDir,
+      {
+        recursive: true,
+      },
+    )
+
+    await page.goto('/')
+
+    const emailInput =
+      page.getByLabel(
+        /email/i,
+      )
+
+    const passwordInput =
+      page.getByLabel(
+        /password/i,
+      )
+
+    await expect(
+      emailInput,
+    ).toBeVisible()
+
+    await expect(
+      passwordInput,
+    ).toBeVisible()
+
+    await emailInput.fill(
+      ADMIN_EMAIL,
+    )
+
+    await passwordInput.fill(
+      ADMIN_PASSWORD,
+    )
+
+    const loginButton =
+      page.getByRole(
+        'button',
+        {
+          name: /sign in|login/i,
+        },
+      )
+
+    await loginButton.click()
+
+    await expect(
+      page.getByRole(
+        'heading',
+        {
+          name: /procurement command center/i,
+        },
+      ),
+    ).toBeVisible({
+      timeout: 20_000,
+    })
+
+    const sessionData =
+      await page.evaluate(() => {
+        const accessToken =
+          window.sessionStorage.getItem(
+            'nexora_access_token',
+          )
+
+        const user =
+          window.sessionStorage.getItem(
+            'nexora_user',
+          )
+
+        return {
+          nexora_access_token:
+            accessToken,
+          nexora_user:
+            user,
+        }
+      })
+
+    if (
+      !sessionData
+        .nexora_access_token
+    ) {
       throw new Error(
-        'admin-session.json not found. Run auth.setup.ts first.',
+        'nexora_access_token was not created after login.',
       )
     }
 
-    const sessionData: SessionData = JSON.parse(
-      fs.readFileSync(
-        sessionStorageFile,
-        'utf-8',
+    if (
+      !sessionData
+        .nexora_user
+    ) {
+      throw new Error(
+        'nexora_user was not created after login.',
+      )
+    }
+
+    fs.writeFileSync(
+      sessionStorageFile,
+      JSON.stringify(
+        sessionData,
+        null,
+        2,
       ),
+      'utf-8',
     )
 
-    await page.addInitScript((data: SessionData) => {
-      window.sessionStorage.setItem(
-        'nexora_access_token',
-        data.nexora_access_token,
-      )
+    await page
+      .context()
+      .storageState({
+        path:
+          storageStateFile,
+      })
 
-      window.sessionStorage.setItem(
-        'nexora_user',
-        data.nexora_user,
+    if (
+      !fs.existsSync(
+        storageStateFile,
       )
-    }, sessionData)
+    ) {
+      throw new Error(
+        'admin.json was not created.',
+      )
+    }
 
-    await use(page)
+    if (
+      !fs.existsSync(
+        sessionStorageFile,
+      )
+    ) {
+      throw new Error(
+        'admin-session.json was not created.',
+      )
+    }
   },
-})
-
-export { expect }
+)
