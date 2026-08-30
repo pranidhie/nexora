@@ -288,7 +288,7 @@ jobs:
 
   env:
     BASE_URL: http://127.0.0.1:5173
-    NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
+    NEXORA_ADMIN_PASSWORD: "${{ secrets.NEXORA_ADMIN_PASSWORD }}"
 
   run: |
     npx playwright test --project=chromium
