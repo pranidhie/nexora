@@ -14,23 +14,18 @@ on:
 jobs:
   test:
     name: Chromium Regression
-
     runs-on: ubuntu-latest
-
     timeout-minutes: 60
 
     services:
       postgres:
         image: postgres:16
-
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: nexora
-
         ports:
           - 5432:5432
-
         options: >-
           --health-cmd="pg_isready -U postgres -d nexora"
           --health-interval=10s
@@ -58,7 +53,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v5
-
         with:
           python-version: "3.12"
           cache: pip
@@ -66,13 +60,12 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       # ---------------------------------------------------------
-      # POSTGRESQL DATABASE
+      # POSTGRESQL
       # ---------------------------------------------------------
 
       - name: Install PostgreSQL client
@@ -83,7 +76,6 @@ jobs:
       - name: Wait for PostgreSQL
         env:
           PGPASSWORD: postgres
-
         run: |
           until pg_isready \
             -h 127.0.0.1 \
@@ -95,10 +87,13 @@ jobs:
             sleep 2
           done
 
+      # ---------------------------------------------------------
+      # DATABASE MIGRATIONS
+      # ---------------------------------------------------------
+
       - name: Run NEXORA database migrations
         env:
           PGPASSWORD: postgres
-
         run: |
           set -e
 
@@ -187,22 +182,20 @@ jobs:
             -f database/migrations/011_phase1_business_rules.sql
 
       # ---------------------------------------------------------
-      # ADMIN TEST ACCOUNT
+      # ADMIN TEST USER
       # ---------------------------------------------------------
 
       - name: Create NEXORA admin user
         working-directory: backend
-
         run: |
           python create_admin.py
 
       # ---------------------------------------------------------
-      # START FASTAPI
+      # FASTAPI
       # ---------------------------------------------------------
 
       - name: Start FastAPI backend
         working-directory: backend
-
         run: |
           nohup uvicorn app.main:app \
             --host 0.0.0.0 \
@@ -234,18 +227,15 @@ jobs:
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
-
         with:
           node-version: 20
 
       - name: Install frontend dependencies
         working-directory: frontend
-
         run: npm ci
 
       - name: Start Vite frontend
         working-directory: frontend
-
         run: |
           nohup npm run dev -- --host 0.0.0.0 \
             > ../frontend.log 2>&1 &
@@ -274,24 +264,20 @@ jobs:
 
       - name: Install automation dependencies
         working-directory: automation
-
         run: npm ci
 
       - name: Install Chromium
         working-directory: automation
-
         run: |
           npx playwright install --with-deps chromium
 
-- name: Run NEXORA Chromium regression
-  working-directory: automation
-
-  env:
-    BASE_URL: http://127.0.0.1:5173
-    NEXORA_ADMIN_PASSWORD: "${{ secrets.NEXORA_ADMIN_PASSWORD }}"
-
-  run: |
-    npx playwright test --project=chromium
+      - name: Run NEXORA Chromium regression
+        working-directory: automation
+        env:
+          BASE_URL: http://127.0.0.1:5173
+          NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
+        run: |
+          npx playwright test --project=chromium
 
       # ---------------------------------------------------------
       # DIAGNOSTIC LOGS
@@ -299,14 +285,12 @@ jobs:
 
       - name: Show backend log on failure
         if: failure()
-
         run: |
           echo "========== FASTAPI LOG =========="
           cat backend.log || true
 
       - name: Show frontend log on failure
         if: failure()
-
         run: |
           echo "========== VITE LOG =========="
           cat frontend.log || true
@@ -317,9 +301,7 @@ jobs:
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
-
         uses: actions/upload-artifact@v4
-
         with:
           name: playwright-report
           path: automation/playwright-report/
@@ -328,9 +310,7 @@ jobs:
 
       - name: Upload test results
         if: ${{ !cancelled() }}
-
         uses: actions/upload-artifact@v4
-
         with:
           name: playwright-test-results
           path: automation/test-results/
@@ -339,9 +319,7 @@ jobs:
 
       - name: Upload application logs
         if: failure()
-
         uses: actions/upload-artifact@v4
-
         with:
           name: nexora-application-logs
           path: |
