@@ -354,13 +354,25 @@ DO NOTHING;
 -- ============================================================
 -- EXISTING PO CURRENCY MIGRATION
 -- ============================================================
+-- Backward-compatible migration for databases that still
+-- contain the legacy purchase_orders.currency column.
+-- Fresh NEXORA databases do not contain this column.
 
-UPDATE procurement.purchase_orders po
-SET currency_id = c.currency_id
-FROM procurement.currencies c
-WHERE
-    c.currency_code = po.currency
-    AND po.currency_id IS NULL;
-
-
-COMMIT;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'procurement'
+          AND table_name = 'purchase_orders'
+          AND column_name = 'currency'
+    ) THEN
+        EXECUTE '
+            UPDATE procurement.purchase_orders po
+            SET currency_id = c.currency_id
+            FROM procurement.currencies c
+            WHERE c.currency_code = po.currency
+              AND po.currency_id IS NULL
+        ';
+    END IF;
+END $$;
