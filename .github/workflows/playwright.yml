@@ -283,14 +283,15 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
 
-      - name: Run NEXORA Chromium regression
-        working-directory: automation
+- name: Run NEXORA Chromium regression
+  working-directory: automation
 
-        env:
-          BASE_URL: http://127.0.0.1:5173
+  env:
+    BASE_URL: http://127.0.0.1:5173
+    NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
 
-        run: |
-          npx playwright test --project=chromium
+  run: |
+    npx playwright test --project=chromium
 
       # ---------------------------------------------------------
       # DIAGNOSTIC LOGS
