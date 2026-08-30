@@ -293,31 +293,26 @@ END $$;
 -- ------------------------------------------------------------
 
 DO $$
+
 BEGIN
+
     IF EXISTS (
         SELECT 1
         FROM information_schema.tables
         WHERE table_schema = 'procurement'
           AND table_name = 'inventory_balances'
     ) THEN
+
         IF NOT EXISTS (
             SELECT 1
             FROM pg_constraint
             WHERE conname = 'ck_inventory_on_hand_non_negative'
         ) THEN
+
             ALTER TABLE procurement.inventory_balances
             ADD CONSTRAINT ck_inventory_on_hand_non_negative
-            CHECK (quantity_on_hand >= 0);
-        END IF;
+            CHECK (on_hand_quantity >= 0);
 
-        IF NOT EXISTS (
-            SELECT 1
-            FROM pg_constraint
-            WHERE conname = 'ck_inventory_reserved_non_negative'
-        ) THEN
-            ALTER TABLE procurement.inventory_balances
-            ADD CONSTRAINT ck_inventory_reserved_non_negative
-            CHECK (quantity_reserved >= 0);
         END IF;
 
         IF NOT EXISTS (
@@ -325,11 +320,27 @@ BEGIN
             FROM pg_constraint
             WHERE conname = 'ck_inventory_available_non_negative'
         ) THEN
+
             ALTER TABLE procurement.inventory_balances
             ADD CONSTRAINT ck_inventory_available_non_negative
-            CHECK (quantity_available >= 0);
+            CHECK (available_quantity >= 0);
+
         END IF;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conname = 'ck_inventory_quarantine_non_negative'
+        ) THEN
+
+            ALTER TABLE procurement.inventory_balances
+            ADD CONSTRAINT ck_inventory_quarantine_non_negative
+            CHECK (quarantine_quantity >= 0);
+
+        END IF;
+
     END IF;
+
 END $$;
 
 COMMIT;
