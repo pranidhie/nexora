@@ -185,10 +185,12 @@ jobs:
       # ADMIN TEST USER
       # ---------------------------------------------------------
 
-      - name: Create NEXORA admin user
-        working-directory: backend
-        run: |
-          python create_admin.py
+- name: Create NEXORA admin user
+  working-directory: backend
+  env:
+    NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
+  run: |
+    python create_admin.py
 
       # ---------------------------------------------------------
       # FASTAPI
