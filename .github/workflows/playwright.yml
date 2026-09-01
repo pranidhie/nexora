@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - master
-
   pull_request:
     branches:
       - main
@@ -65,7 +64,7 @@ jobs:
           pip install -r requirements.txt
 
       # ---------------------------------------------------------
-      # POSTGRESQL
+      # POSTGRESQL DATABASE
       # ---------------------------------------------------------
 
       - name: Install PostgreSQL client
@@ -86,10 +85,6 @@ jobs:
             echo "Waiting for PostgreSQL..."
             sleep 2
           done
-
-      # ---------------------------------------------------------
-      # DATABASE MIGRATIONS
-      # ---------------------------------------------------------
 
       - name: Run NEXORA database migrations
         env:
@@ -185,15 +180,15 @@ jobs:
       # ADMIN TEST USER
       # ---------------------------------------------------------
 
-- name: Create NEXORA admin user
-  working-directory: backend
-  env:
-    NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
-  run: |
-    python create_admin.py
+      - name: Create NEXORA admin user
+        working-directory: backend
+        env:
+          NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
+        run: |
+          python create_admin.py
 
       # ---------------------------------------------------------
-      # FASTAPI
+      # START FASTAPI
       # ---------------------------------------------------------
 
       - name: Start FastAPI backend
