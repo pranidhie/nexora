@@ -4,14 +4,17 @@ on:
   push:
     branches:
       - main
+
   pull_request:
     branches:
       - main
+
   workflow_dispatch:
 
 jobs:
   playwright:
     name: Chromium Regression
+
     runs-on: ubuntu-latest
 
     timeout-minutes: 30
@@ -53,36 +56,51 @@ jobs:
         uses: actions/checkout@v4
 
       # ======================================================
-      # PYTHON / BACKEND
+      # PYTHON
       # ======================================================
 
       - name: Set up Python
         uses: actions/setup-python@v5
+
         with:
           python-version: "3.12"
+
           cache: pip
+
           cache-dependency-path: backend/requirements.txt
+
+      # ======================================================
+      # BACKEND DEPENDENCIES
+      # ======================================================
 
       - name: Install backend dependencies
         working-directory: backend
+
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       # ======================================================
-      # WAIT FOR POSTGRESQL
+      # POSTGRESQL CLIENT
       # ======================================================
 
       - name: Install PostgreSQL client
+
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
+      # ======================================================
+      # WAIT FOR POSTGRESQL
+      # ======================================================
+
       - name: Wait for PostgreSQL
+
         run: |
           echo "Waiting for PostgreSQL..."
 
           for i in {1..30}; do
+
             if pg_isready \
               -h 127.0.0.1 \
               -p 5432 \
@@ -94,48 +112,52 @@ jobs:
             fi
 
             echo "PostgreSQL not ready yet..."
+
             sleep 2
+
           done
 
           echo "PostgreSQL failed to start."
+
           exit 1
 
       # ======================================================
       # DATABASE SCHEMA
       # ======================================================
-      #
-      # IMPORTANT:
-      #
-      # We intentionally DO NOT run the old table-creation SQL
-      # migrations here.
-      #
-      # CI receives a fresh PostgreSQL database. The database
-      # structure is therefore generated from the CURRENT
-      # SQLAlchemy models.
-      #
-      # This prevents model/migration schema drift.
-      # ======================================================
 
       - name: Initialize NEXORA database schema
         working-directory: backend
+
         run: |
           python init_ci_database.py
 
       # ======================================================
-      # CREATE ADMIN USER
+      # ADMIN USER
       # ======================================================
 
       - name: Create NEXORA admin user
         working-directory: backend
+
         env:
           NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
+
         run: |
           if [ -z "$NEXORA_ADMIN_PASSWORD" ]; then
-            echo "NEXORA_ADMIN_PASSWORD secret is not configured."
+            echo "NEXORA_ADMIN_PASSWORD secret is missing."
             exit 1
           fi
 
           python create_admin.py
+
+      # ======================================================
+      # CI REFERENCE DATA
+      # ======================================================
+
+      - name: Seed NEXORA CI reference data
+        working-directory: backend
+
+        run: |
+          python seed_ci_database.py
 
       # ======================================================
       # START FASTAPI
@@ -143,6 +165,7 @@ jobs:
 
       - name: Start FastAPI backend
         working-directory: backend
+
         run: |
           nohup python -m uvicorn app.main:app \
             --host 0.0.0.0 \
@@ -153,28 +176,42 @@ jobs:
 
           echo "FastAPI process started."
 
+      # ======================================================
+      # WAIT FOR FASTAPI
+      # ======================================================
+
       - name: Wait for FastAPI
+
         run: |
           echo "Waiting for FastAPI..."
 
           for i in {1..60}; do
-            if curl --silent \
+
+            if curl \
+              --silent \
               --fail \
               http://127.0.0.1:8001/docs \
               > /dev/null
             then
+
               echo "FastAPI is ready."
+
               exit 0
+
             fi
 
             sleep 2
+
           done
 
           echo "FastAPI failed to start."
 
           echo ""
+
           echo "========== BACKEND LOG =========="
+
           cat backend.log || true
+
           echo "================================="
 
           exit 1
@@ -185,20 +222,27 @@ jobs:
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
+
         with:
           node-version: "20"
 
       # ======================================================
-      # FRONTEND
+      # FRONTEND DEPENDENCIES
       # ======================================================
 
       - name: Install frontend dependencies
         working-directory: frontend
+
         run: |
           npm ci
 
+      # ======================================================
+      # START FRONTEND
+      # ======================================================
+
       - name: Start Vite frontend
         working-directory: frontend
+
         run: |
           nohup npm run dev -- \
             --host 0.0.0.0 \
@@ -209,66 +253,89 @@ jobs:
 
           echo "Vite process started."
 
+      # ======================================================
+      # WAIT FOR FRONTEND
+      # ======================================================
+
       - name: Wait for Vite
+
         run: |
           echo "Waiting for Vite..."
 
           for i in {1..60}; do
-            if curl --silent \
+
+            if curl \
+              --silent \
               --fail \
               http://127.0.0.1:5173 \
               > /dev/null
             then
+
               echo "Vite is ready."
+
               exit 0
+
             fi
 
             sleep 2
+
           done
 
           echo "Vite failed to start."
 
           echo ""
+
           echo "========== FRONTEND LOG =========="
+
           cat frontend.log || true
+
           echo "=================================="
 
           exit 1
 
       # ======================================================
-      # PLAYWRIGHT
+      # AUTOMATION DEPENDENCIES
       # ======================================================
 
       - name: Install automation dependencies
         working-directory: automation
+
         run: |
           npm ci
 
+      # ======================================================
+      # CHROMIUM
+      # ======================================================
+
       - name: Install Chromium
         working-directory: automation
+
         run: |
           npx playwright install --with-deps chromium
 
       # ======================================================
-      # RUN REGRESSION
+      # PLAYWRIGHT REGRESSION
       # ======================================================
 
       - name: Run NEXORA Chromium regression
         working-directory: automation
+
         env:
           NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
           CI: true
+
         run: |
           npx playwright test \
             --project=chromium \
             --workers=1
 
       # ======================================================
-      # DEBUG LOGS
+      # FAILURE DIAGNOSTICS
       # ======================================================
 
       - name: Print backend log on failure
         if: failure()
+
         run: |
           echo ""
           echo "=========================================="
@@ -279,6 +346,7 @@ jobs:
 
       - name: Print frontend log on failure
         if: failure()
+
         run: |
           echo ""
           echo "=========================================="
@@ -288,34 +356,57 @@ jobs:
           cat frontend.log || true
 
       # ======================================================
-      # ARTIFACTS
+      # PLAYWRIGHT REPORT
       # ======================================================
 
       - name: Upload Playwright HTML report
         if: always()
+
         uses: actions/upload-artifact@v4
+
         with:
           name: nexora-playwright-report
+
           path: automation/playwright-report/
+
           if-no-files-found: ignore
+
           retention-days: 14
+
+      # ======================================================
+      # TEST RESULTS
+      # ======================================================
 
       - name: Upload Playwright test results
         if: always()
+
         uses: actions/upload-artifact@v4
+
         with:
           name: nexora-playwright-test-results
+
           path: automation/test-results/
+
           if-no-files-found: ignore
+
           retention-days: 14
+
+      # ======================================================
+      # APPLICATION LOGS
+      # ======================================================
 
       - name: Upload application logs
         if: always()
+
         uses: actions/upload-artifact@v4
+
         with:
           name: nexora-application-logs
+
           path: |
             backend.log
             frontend.log
+
           if-no-files-found: ignore
+
           retention-days: 14
