@@ -1,30 +1,33 @@
-name: NEXORA Playwright Tests
+name: NEXORA Playwright Regression
 
 on:
   push:
     branches:
       - main
-      - master
   pull_request:
     branches:
       - main
-      - master
+  workflow_dispatch:
 
 jobs:
-  test:
+  playwright:
     name: Chromium Regression
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+
+    timeout-minutes: 30
 
     services:
       postgres:
         image: postgres:16
+
         env:
+          POSTGRES_DB: nexora
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nexora
+
         ports:
           - 5432:5432
+
         options: >-
           --health-cmd="pg_isready -U postgres -d nexora"
           --health-interval=10s
@@ -33,22 +36,25 @@ jobs:
 
     env:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/nexora
+
       JWT_SECRET_KEY: nexora-ci-test-secret-key
       JWT_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 15
       REFRESH_TOKEN_EXPIRE_DAYS: 7
 
+      PYTHONUNBUFFERED: 1
+
     steps:
-      # ---------------------------------------------------------
+      # ======================================================
       # CHECKOUT
-      # ---------------------------------------------------------
+      # ======================================================
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ---------------------------------------------------------
-      # PYTHON / FASTAPI
-      # ---------------------------------------------------------
+      # ======================================================
+      # PYTHON / BACKEND
+      # ======================================================
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -63,9 +69,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ---------------------------------------------------------
-      # POSTGRESQL DATABASE
-      # ---------------------------------------------------------
+      # ======================================================
+      # WAIT FOR POSTGRESQL
+      # ======================================================
 
       - name: Install PostgreSQL client
         run: |
@@ -73,254 +79,243 @@ jobs:
           sudo apt-get install -y postgresql-client
 
       - name: Wait for PostgreSQL
-        env:
-          PGPASSWORD: postgres
         run: |
-          until pg_isready \
-            -h 127.0.0.1 \
-            -p 5432 \
-            -U postgres \
-            -d nexora
-          do
-            echo "Waiting for PostgreSQL..."
+          echo "Waiting for PostgreSQL..."
+
+          for i in {1..30}; do
+            if pg_isready \
+              -h 127.0.0.1 \
+              -p 5432 \
+              -U postgres \
+              -d nexora
+            then
+              echo "PostgreSQL is ready."
+              exit 0
+            fi
+
+            echo "PostgreSQL not ready yet..."
             sleep 2
           done
 
-      - name: Run NEXORA database migrations
-        env:
-          PGPASSWORD: postgres
+          echo "PostgreSQL failed to start."
+          exit 1
+
+      # ======================================================
+      # DATABASE SCHEMA
+      # ======================================================
+      #
+      # IMPORTANT:
+      #
+      # We intentionally DO NOT run the old table-creation SQL
+      # migrations here.
+      #
+      # CI receives a fresh PostgreSQL database. The database
+      # structure is therefore generated from the CURRENT
+      # SQLAlchemy models.
+      #
+      # This prevents model/migration schema drift.
+      # ======================================================
+
+      - name: Initialize NEXORA database schema
+        working-directory: backend
         run: |
-          set -e
+          python init_ci_database.py
 
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/001_create_security_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/002_create_supplier_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/003_create_catalogue_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/004_create_requisition_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/005_create_purchase_order_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/006_create_workflow_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/007_seed_reference_data.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/008_create_inventory_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/009_create_warehouse_tables.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/010_seed_warehouse_reference_data.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/011_tax_currency_master.sql
-
-          psql \
-            -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 \
-            -U postgres \
-            -d nexora \
-            -f database/migrations/011_phase1_business_rules.sql
-
-      # ---------------------------------------------------------
-      # ADMIN TEST USER
-      # ---------------------------------------------------------
+      # ======================================================
+      # CREATE ADMIN USER
+      # ======================================================
 
       - name: Create NEXORA admin user
         working-directory: backend
         env:
           NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
         run: |
+          if [ -z "$NEXORA_ADMIN_PASSWORD" ]; then
+            echo "NEXORA_ADMIN_PASSWORD secret is not configured."
+            exit 1
+          fi
+
           python create_admin.py
 
-      # ---------------------------------------------------------
+      # ======================================================
       # START FASTAPI
-      # ---------------------------------------------------------
+      # ======================================================
 
       - name: Start FastAPI backend
         working-directory: backend
         run: |
-          nohup uvicorn app.main:app \
+          nohup python -m uvicorn app.main:app \
             --host 0.0.0.0 \
             --port 8001 \
             > ../backend.log 2>&1 &
 
+          echo $! > ../backend.pid
+
+          echo "FastAPI process started."
+
       - name: Wait for FastAPI
         run: |
-          for attempt in {1..30}
-          do
-            if curl --fail --silent http://127.0.0.1:8001/health
+          echo "Waiting for FastAPI..."
+
+          for i in {1..60}; do
+            if curl --silent \
+              --fail \
+              http://127.0.0.1:8001/docs \
+              > /dev/null
             then
-              echo
-              echo "NEXORA backend is ready."
+              echo "FastAPI is ready."
               exit 0
             fi
 
-            echo "Waiting for FastAPI... attempt ${attempt}/30"
             sleep 2
           done
 
           echo "FastAPI failed to start."
+
+          echo ""
+          echo "========== BACKEND LOG =========="
           cat backend.log || true
+          echo "================================="
+
           exit 1
 
-      # ---------------------------------------------------------
-      # FRONTEND
-      # ---------------------------------------------------------
+      # ======================================================
+      # NODE
+      # ======================================================
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
+
+      # ======================================================
+      # FRONTEND
+      # ======================================================
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        run: |
+          npm ci
 
       - name: Start Vite frontend
         working-directory: frontend
         run: |
-          nohup npm run dev -- --host 0.0.0.0 \
+          nohup npm run dev -- \
+            --host 0.0.0.0 \
+            --port 5173 \
             > ../frontend.log 2>&1 &
 
-      - name: Wait for frontend
+          echo $! > ../frontend.pid
+
+          echo "Vite process started."
+
+      - name: Wait for Vite
         run: |
-          for attempt in {1..30}
-          do
-            if curl --fail --silent http://127.0.0.1:5173 > /dev/null
+          echo "Waiting for Vite..."
+
+          for i in {1..60}; do
+            if curl --silent \
+              --fail \
+              http://127.0.0.1:5173 \
+              > /dev/null
             then
-              echo "NEXORA frontend is ready."
+              echo "Vite is ready."
               exit 0
             fi
 
-            echo "Waiting for Vite... attempt ${attempt}/30"
             sleep 2
           done
 
-          echo "Frontend failed to start."
+          echo "Vite failed to start."
+
+          echo ""
+          echo "========== FRONTEND LOG =========="
           cat frontend.log || true
+          echo "=================================="
+
           exit 1
 
-      # ---------------------------------------------------------
+      # ======================================================
       # PLAYWRIGHT
-      # ---------------------------------------------------------
+      # ======================================================
 
       - name: Install automation dependencies
         working-directory: automation
-        run: npm ci
+        run: |
+          npm ci
 
       - name: Install Chromium
         working-directory: automation
         run: |
           npx playwright install --with-deps chromium
 
+      # ======================================================
+      # RUN REGRESSION
+      # ======================================================
+
       - name: Run NEXORA Chromium regression
         working-directory: automation
         env:
-          BASE_URL: http://127.0.0.1:5173
           NEXORA_ADMIN_PASSWORD: ${{ secrets.NEXORA_ADMIN_PASSWORD }}
+          CI: true
         run: |
-          npx playwright test --project=chromium
+          npx playwright test \
+            --project=chromium \
+            --workers=1
 
-      # ---------------------------------------------------------
-      # DIAGNOSTIC LOGS
-      # ---------------------------------------------------------
+      # ======================================================
+      # DEBUG LOGS
+      # ======================================================
 
-      - name: Show backend log on failure
+      - name: Print backend log on failure
         if: failure()
         run: |
-          echo "========== FASTAPI LOG =========="
+          echo ""
+          echo "=========================================="
+          echo "FASTAPI BACKEND LOG"
+          echo "=========================================="
+
           cat backend.log || true
 
-      - name: Show frontend log on failure
+      - name: Print frontend log on failure
         if: failure()
         run: |
-          echo "========== VITE LOG =========="
+          echo ""
+          echo "=========================================="
+          echo "VITE FRONTEND LOG"
+          echo "=========================================="
+
           cat frontend.log || true
 
-      # ---------------------------------------------------------
-      # TEST ARTIFACTS
-      # ---------------------------------------------------------
+      # ======================================================
+      # ARTIFACTS
+      # ======================================================
 
-      - name: Upload Playwright report
-        if: ${{ !cancelled() }}
+      - name: Upload Playwright HTML report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: nexora-playwright-report
           path: automation/playwright-report/
-          retention-days: 30
           if-no-files-found: ignore
+          retention-days: 14
 
-      - name: Upload test results
-        if: ${{ !cancelled() }}
+      - name: Upload Playwright test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results
+          name: nexora-playwright-test-results
           path: automation/test-results/
-          retention-days: 30
           if-no-files-found: ignore
+          retention-days: 14
 
       - name: Upload application logs
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: nexora-application-logs
           path: |
             backend.log
             frontend.log
-          retention-days: 14
           if-no-files-found: ignore
+          retention-days: 14
