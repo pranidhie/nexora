@@ -1,7 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.dependencies.auth import get_current_user
 from app.schemas.purchase_request import (
     PurchaseRequestCreate,
     PurchaseRequestResponse,
@@ -14,9 +20,13 @@ from app.services.purchase_request_service import (
     update_purchase_request,
 )
 
+
 router = APIRouter(
     prefix="/api/v1/purchase-requests",
     tags=["Purchase Requests"],
+    dependencies=[
+        Depends(get_current_user),
+    ],
 )
 
 

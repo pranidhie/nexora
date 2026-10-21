@@ -1,7 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.dependencies.auth import get_current_user
 from app.schemas.approval import (
     ApprovalCreate,
     ApprovalDecision,
@@ -14,9 +20,13 @@ from app.services.approval_service import (
     list_approvals,
 )
 
+
 router = APIRouter(
     prefix="/api/v1/approvals",
     tags=["Approvals"],
+    dependencies=[
+        Depends(get_current_user),
+    ],
 )
 
 
@@ -61,10 +71,17 @@ def add_approval(
     approval_data: ApprovalCreate,
     db: Session = Depends(get_db),
 ) -> ApprovalResponse:
-    return create_approval(
-        db,
-        approval_data,
-    )
+    try:
+        return create_approval(
+            db,
+            approval_data,
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
 
 
 @router.patch(
@@ -93,6 +110,7 @@ def make_approval_decision(
             approval,
             decision_data,
         )
+
     except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

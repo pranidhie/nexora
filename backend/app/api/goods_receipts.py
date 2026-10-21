@@ -1,7 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.dependencies.auth import get_current_user
 from app.schemas.goods_receipt import (
     GoodsReceiptCreate,
     GoodsReceiptResponse,
@@ -12,9 +18,13 @@ from app.services.goods_receipt_service import (
     list_goods_receipts,
 )
 
+
 router = APIRouter(
     prefix="/api/v1/goods-receipts",
     tags=["Goods Receipts"],
+    dependencies=[
+        Depends(get_current_user),
+    ],
 )
 
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.dependencies.auth import get_current_user
 from app.schemas.supplier import (
     SupplierCreate,
     SupplierResponse,
@@ -14,9 +15,13 @@ from app.services.supplier_service import (
     update_supplier,
 )
 
+
 router = APIRouter(
     prefix="/api/v1/suppliers",
     tags=["Suppliers"],
+    dependencies=[
+        Depends(get_current_user),
+    ],
 )
 
 
@@ -27,6 +32,8 @@ router = APIRouter(
 def get_suppliers(
     db: Session = Depends(get_db),
 ) -> list[SupplierResponse]:
+    """Return all suppliers."""
+
     return list_suppliers(db)
 
 
@@ -38,6 +45,8 @@ def get_supplier(
     supplier_id: int,
     db: Session = Depends(get_db),
 ) -> SupplierResponse:
+    """Return one supplier using its ID."""
+
     supplier = get_supplier_by_id(
         db,
         supplier_id,
@@ -61,11 +70,14 @@ def add_supplier(
     supplier_data: SupplierCreate,
     db: Session = Depends(get_db),
 ) -> SupplierResponse:
+    """Create a new supplier."""
+
     try:
         return create_supplier(
             db,
             supplier_data,
         )
+
     except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -82,6 +94,8 @@ def edit_supplier(
     supplier_data: SupplierUpdate,
     db: Session = Depends(get_db),
 ) -> SupplierResponse:
+    """Update an existing supplier."""
+
     supplier = get_supplier_by_id(
         db,
         supplier_id,

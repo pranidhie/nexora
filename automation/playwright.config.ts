@@ -17,6 +17,10 @@ const baseURL =
   process.env.BASE_URL ??
   'http://localhost:5173'
 
+const apiBaseURL =
+  process.env.API_BASE_URL ??
+  'http://127.0.0.1:8001'
+
 export default defineConfig({
   testDir: './tests',
 
@@ -25,11 +29,10 @@ export default defineConfig({
   // ============================================================
 
   // NEXORA currently uses shared backend/database state.
-  // Running tests in parallel causes Approval and Goods Receipt
-  // scenarios to interfere with one another.
+  // Parallel execution may cause Procurement tests to interfere
+  // with one another.
   fullyParallel: false,
 
-  // Stable execution for local and CI regression runs.
   workers: 1,
 
   forbidOnly:
@@ -77,7 +80,7 @@ export default defineConfig({
   ],
 
   // ============================================================
-  // SHARED BROWSER SETTINGS
+  // SHARED SETTINGS
   // ============================================================
 
   use: {
@@ -105,11 +108,30 @@ export default defineConfig({
 
   projects: [
     // ----------------------------------------------------------
-    // AUTH SETUP
+    // API TESTING
+    // Does not require a browser or UI authentication setup.
     // ----------------------------------------------------------
 
     {
-      name: 'setup',
+      name:
+        'api',
+
+      testMatch:
+        /.*\.api\.spec\.ts/,
+
+      use: {
+        baseURL:
+          apiBaseURL,
+      },
+    },
+
+    // ----------------------------------------------------------
+    // UI AUTHENTICATION SETUP
+    // ----------------------------------------------------------
+
+    {
+      name:
+        'setup',
 
       testMatch:
         /.*\.setup\.ts/,
@@ -117,15 +139,18 @@ export default defineConfig({
 
     // ----------------------------------------------------------
     // CHROMIUM
-    // PRIMARY REGRESSION BROWSER
     // ----------------------------------------------------------
 
     {
-      name: 'chromium',
+      name:
+        'chromium',
 
       dependencies: [
         'setup',
       ],
+
+      testIgnore:
+        /.*\.api\.spec\.ts/,
 
       use: {
         ...devices[
@@ -139,15 +164,18 @@ export default defineConfig({
 
     // ----------------------------------------------------------
     // FIREFOX
-    // CROSS-BROWSER VALIDATION
     // ----------------------------------------------------------
 
     {
-      name: 'firefox',
+      name:
+        'firefox',
 
       dependencies: [
         'setup',
       ],
+
+      testIgnore:
+        /.*\.api\.spec\.ts/,
 
       use: {
         ...devices[
@@ -161,15 +189,18 @@ export default defineConfig({
 
     // ----------------------------------------------------------
     // WEBKIT
-    // CROSS-BROWSER VALIDATION
     // ----------------------------------------------------------
 
     {
-      name: 'webkit',
+      name:
+        'webkit',
 
       dependencies: [
         'setup',
       ],
+
+      testIgnore:
+        /.*\.api\.spec\.ts/,
 
       use: {
         ...devices[
