@@ -8,9 +8,7 @@ from app.ai.evaluation.golden import (
     GoldenDataset,
     GoldenEvaluationCase,
 )
-from app.ai.retrieval.lexical import (
-    LexicalRetriever,
-)
+from app.ai.retrieval.lexical import LexicalRetriever
 
 
 MAX_EVALUATION_TOP_K = 20
@@ -72,9 +70,7 @@ def _first_relevant_rank(
 ) -> int | None:
     """Return the one-based rank of the first expected source."""
 
-    expected_sources = set(
-        expected_source_ids
-    )
+    expected_sources = set(expected_source_ids)
 
     for rank, source_id in enumerate(
         retrieved_source_ids,
@@ -91,6 +87,7 @@ def evaluate_retrieval_case(
     retriever: LexicalRetriever,
     *,
     top_k: int,
+    allowed_source_ids: tuple[str, ...] | None = None,
 ) -> RetrievalCaseResult:
     """Evaluate retrieval for one answerable golden case."""
 
@@ -100,10 +97,27 @@ def evaluate_retrieval_case(
             f"retrieval case."
         )
 
+    search_top_k = (
+        MAX_EVALUATION_TOP_K
+        if allowed_source_ids is not None
+        else top_k
+    )
+
     retrieval_results = retriever.search(
         case.question,
-        top_k=top_k,
+        top_k=search_top_k,
     )
+
+    if allowed_source_ids is not None:
+        allowed_sources = set(allowed_source_ids)
+
+        retrieval_results = tuple(
+            result
+            for result in retrieval_results
+            if result.chunk.source_id in allowed_sources
+        )
+
+    retrieval_results = retrieval_results[:top_k]
 
     retrieved_source_ids = _unique_source_ids(
         tuple(
@@ -176,6 +190,7 @@ def evaluate_retrieval(
             case,
             retriever,
             top_k=top_k,
+            allowed_source_ids=dataset.source_ids,
         )
         for case in answerable_cases
     )
