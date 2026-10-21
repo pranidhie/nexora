@@ -40,3 +40,32 @@ class ExtractedDocument:
             len(section.text)
             for section in self.sections
         )
+
+
+@dataclass(frozen=True)
+class KnowledgeChunk:
+    """One retrieval-ready unit with complete provenance."""
+
+    chunk_id: str
+    source_id: str
+    document_title: str
+    relative_path: str
+    format: str
+    document_type: str
+    phase: str
+    domain: str
+    classification: str
+    tags: tuple[str, ...]
+    file_sha256: str
+    section_id: str
+    section_title: str
+    locator: str
+    chunk_index: int
+    text: str
+    content_sha256: str
+
+    @property
+    def character_count(self) -> int:
+        """Return the number of characters in the chunk."""
+
+        return len(self.text)
