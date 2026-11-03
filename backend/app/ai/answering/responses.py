@@ -13,6 +13,12 @@ from app.ai.answering.models import (
 )
 
 
+INSUFFICIENT_EVIDENCE_ANSWER = (
+    "The answer cannot be confirmed from "
+    "the approved NEXORA knowledge."
+)
+
+
 class ModelResponseError(ValueError):
     """Raised when an LLM response violates the answer contract."""
 
@@ -144,11 +150,6 @@ def parse_model_response(
             "Security refusals must come from the query policy."
         )
 
-    answer = _require_string(
-        parsed_response.get("answer"),
-        "answer",
-    )
-
     cited_chunk_ids = _require_chunk_ids(
         parsed_response.get("cited_chunk_ids")
     )
@@ -164,6 +165,11 @@ def parse_model_response(
         reason = None
 
     if status == AnswerStatus.ANSWER:
+        answer = _require_string(
+            parsed_response.get("answer"),
+            "answer",
+        )
+
         if not cited_chunk_ids:
             raise ModelResponseError(
                 "An answer response must cite at least "
@@ -187,6 +193,16 @@ def parse_model_response(
         raise ModelResponseError(
             "An insufficient_evidence response must not "
             "include citations."
+        )
+
+    raw_answer = parsed_response.get("answer")
+
+    if raw_answer is None:
+        answer = INSUFFICIENT_EVIDENCE_ANSWER
+    else:
+        answer = _require_string(
+            raw_answer,
+            "answer",
         )
 
     return GroundedAnswer(

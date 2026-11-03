@@ -13,6 +13,7 @@ import type {
 
 export type ProcurementSection =
   | 'dashboard'
+  | 'ai-assistant'
   | 'suppliers'
   | 'catalogue'
   | 'purchase-requests'
@@ -58,42 +59,47 @@ function ProcurementLayout({
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: '▦',
+      icon: 'DB',
+    },
+    {
+      id: 'ai-assistant',
+      label: 'AI Quality Assistant',
+      icon: 'AI',
     },
     {
       id: 'suppliers',
       label: 'Suppliers',
-      icon: '◫',
+      icon: 'SU',
     },
     {
       id: 'catalogue',
       label: 'Catalogue',
-      icon: '▤',
+      icon: 'CA',
     },
     {
       id: 'purchase-requests',
       label: 'Purchase Requests',
-      icon: '◧',
+      icon: 'PR',
     },
     {
       id: 'purchase-orders',
       label: 'Purchase Orders',
-      icon: '▤',
+      icon: 'PO',
     },
     {
       id: 'approvals',
       label: 'Approvals',
-      icon: '✓',
+      icon: 'AP',
     },
     {
       id: 'goods-receipts',
       label: 'Goods Receipts',
-      icon: '⬒',
+      icon: 'GR',
     },
     {
       id: 'inventory',
       label: 'Inventory',
-      icon: 'INV',
+      icon: 'IN',
     },
   ]
 
@@ -114,16 +120,26 @@ function ProcurementLayout({
     }
 
 
+  const workspaceName =
+    activeSection ===
+    'ai-assistant'
+      ? 'AI Quality Engineering'
+      : 'Procurement'
+
+
   const defaultBreadcrumbs:
     BreadcrumbItem[] = [
       {
         label:
-          'Procurement',
+          workspaceName,
 
         onClick:
           () =>
             onNavigate(
-              'dashboard',
+              activeSection ===
+              'ai-assistant'
+                ? 'ai-assistant'
+                : 'dashboard',
             ),
       },
       {
@@ -157,7 +173,7 @@ function ProcurementLayout({
             </span>
 
             <strong>
-              Procurement
+              NEXORA Platform
             </strong>
           </div>
         </div>
@@ -170,7 +186,7 @@ function ProcurementLayout({
 
         <nav
           className="sidebar-navigation"
-          aria-label="Procurement navigation"
+          aria-label="NEXORA workspace navigation"
         >
           {navigationItems.map(
             (item) => (
@@ -223,7 +239,7 @@ function ProcurementLayout({
           </div>
 
           <p>
-            Procurement services operational
+            ERP and AI quality services operational
           </p>
         </div>
 
@@ -269,7 +285,7 @@ function ProcurementLayout({
 
           <div>
             <p className="workspace-breadcrumb">
-              Procurement / {getPageTitle()}
+              {workspaceName} / {getPageTitle()}
             </p>
 
             <h2>

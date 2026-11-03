@@ -10,6 +10,7 @@ from app.ai.answering.models import (
     AnswerStatus,
 )
 from app.ai.answering.responses import (
+    INSUFFICIENT_EVIDENCE_ANSWER,
     ModelResponseError,
     parse_model_response,
 )
@@ -44,7 +45,7 @@ def create_evidence() -> PreparedEvidence:
 def create_raw_response(
     *,
     status: str = "answer",
-    answer: str = (
+    answer: str | None = (
         "The baseline records 48 passing "
         "API and data-layer checks."
     ),
@@ -108,6 +109,38 @@ def test_parse_valid_insufficient_evidence() -> None:
         AnswerStatus.INSUFFICIENT_EVIDENCE
     )
     assert response.citations == ()
+
+
+def test_accepts_null_answer_for_insufficient_evidence() -> None:
+    """A model abstention may represent its answer as null."""
+
+    reason = (
+        "The retrieved evidence does not provide "
+        "the requested information."
+    )
+
+    response = parse_model_response(
+        query="What is the production release date?",
+        raw_response=create_raw_response(
+            status="insufficient_evidence",
+            answer=None,
+            cited_chunk_ids=[],
+            reason=reason,
+        ),
+        evidence=PreparedEvidence(
+            context="",
+            citations=(),
+        ),
+    )
+
+    assert response.status == (
+        AnswerStatus.INSUFFICIENT_EVIDENCE
+    )
+    assert response.answer == (
+        INSUFFICIENT_EVIDENCE_ANSWER
+    )
+    assert response.citations == ()
+    assert response.reason == reason
 
 
 def test_rejects_non_json_response() -> None:

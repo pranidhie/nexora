@@ -20,49 +20,29 @@ import type {
   ProcurementSection,
 } from './components/layout/ProcurementLayout'
 
+import AIQualityAssistantPage from './pages/ai/AIQualityAssistantPage'
+import ApprovalsPage from './pages/procurement/ApprovalsPage'
+import CataloguePage from './pages/procurement/CataloguePage'
+import GoodsReceiptsPage from './pages/procurement/GoodsReceiptsPage'
+import InventoryPage from './pages/procurement/InventoryPage'
 import ProcurementDashboard from './pages/procurement/ProcurementDashboard'
-
+import PurchaseOrdersPage from './pages/procurement/PurchaseOrdersPage'
+import PurchaseRequestsPage from './pages/procurement/PurchaseRequestsPage'
 import SuppliersPage from './pages/procurement/SuppliersPage'
 
-import CataloguePage from './pages/procurement/CataloguePage'
-
-import PurchaseRequestsPage from './pages/procurement/PurchaseRequestsPage'
-
-import PurchaseOrdersPage from './pages/procurement/PurchaseOrdersPage'
-
-import ApprovalsPage from './pages/procurement/ApprovalsPage'
-
-import GoodsReceiptsPage from './pages/procurement/GoodsReceiptsPage'
-
-import InventoryPage from './pages/procurement/InventoryPage'
-
-
-// ============================================================
-// LOGIN RESPONSE
-// ============================================================
 
 type LoginResponse = {
   access_token: string
-
   token_type: string
-
   user: {
     user_id: number
-
     first_name: string
-
     last_name: string
-
     email: string
-
     status: string
   }
 }
 
-
-// ============================================================
-// APP
-// ============================================================
 
 function App() {
   const [
@@ -85,9 +65,20 @@ function App() {
     setError,
   ] = useState('')
 
-  // ============================================================
-  // RESTORE AUTHENTICATED USER FROM SESSION STORAGE
-  // ============================================================
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(false)
+
+  const [
+    activeSection,
+    setActiveSection,
+  ] = useState<ProcurementSection>(
+    'dashboard',
+  )
+
+
+  // Restore authenticated user from session storage.
 
   const [
     userName,
@@ -125,7 +116,9 @@ function App() {
         return ''
       }
 
-      return `${user.first_name} ${user.last_name}`
+      return (
+        `${user.first_name} ${user.last_name}`
+      )
     } catch {
       sessionStorage.removeItem(
         'nexora_user',
@@ -139,23 +132,8 @@ function App() {
     }
   })
 
-  const [
-    isLoading,
-    setIsLoading,
-  ] = useState(false)
 
-  const [
-    activeSection,
-    setActiveSection,
-  ] =
-    useState<ProcurementSection>(
-      'dashboard',
-    )
-
-
-  // ============================================================
-  // LOGIN
-  // ============================================================
+  // Authenticate the user.
 
   const handleLogin =
     async (
@@ -199,9 +177,7 @@ function App() {
             },
           )
 
-        if (
-          !response.ok
-        ) {
+        if (!response.ok) {
           if (
             response.status ===
             401
@@ -243,24 +219,19 @@ function App() {
         loginError
       ) {
         const message =
-          loginError instanceof Error
+          loginError instanceof
+          Error
             ? loginError.message
             : 'Unable to sign in.'
 
-        setError(
-          message,
-        )
+        setError(message)
       } finally {
-        setIsLoading(
-          false,
-        )
+        setIsLoading(false)
       }
     }
 
 
-  // ============================================================
-  // LOGOUT
-  // ============================================================
+  // End the authenticated session.
 
   const handleLogout =
     () => {
@@ -273,11 +244,8 @@ function App() {
       )
 
       setUserName('')
-
       setEmail('')
-
       setPassword('')
-
       setError('')
 
       setActiveSection(
@@ -286,9 +254,7 @@ function App() {
     }
 
 
-  // ============================================================
-  // AUTHENTICATED PROCUREMENT PAGES
-  // ============================================================
+  // Render the selected NEXORA module.
 
   const renderAuthenticatedContent =
     () => {
@@ -302,6 +268,11 @@ function App() {
                 setActiveSection
               }
             />
+          )
+
+        case 'ai-assistant':
+          return (
+            <AIQualityAssistantPage />
           )
 
         case 'suppliers':
@@ -351,27 +322,20 @@ function App() {
     }
 
 
-  // ============================================================
-  // AUTHENTICATED APPLICATION
-  // ============================================================
+  // Authenticated NEXORA application.
 
-  if (
-    userName
-  ) {
+  if (userName) {
     return (
       <ProcurementLayout
         userName={
           userName
         }
-
         activeSection={
           activeSection
         }
-
         onNavigate={
           setActiveSection
         }
-
         onLogout={
           handleLogout
         }
@@ -384,29 +348,13 @@ function App() {
   }
 
 
-  // ============================================================
-  // LOGIN PAGE
-  // ============================================================
+  // Login page.
 
   return (
-    <main
-      className="login-page"
-    >
+    <main className="login-page">
 
-      {/* ======================================================
-          LEFT BRAND / AI PANEL
-      ====================================================== */}
-
-      <section
-        className="brand-panel"
-      >
-        <div
-          className="brand-content"
-        >
-
-          {/* ==================================================
-              LOGO
-          ================================================== */}
+      <section className="brand-panel">
+        <div className="brand-content">
 
           <NexoraLogo
             size={64}
@@ -414,111 +362,50 @@ function App() {
           />
 
 
-          {/* ==================================================
-              HERO CONTENT
-          ================================================== */}
-
           <h2>
             Procurement intelligence,
             engineered with confidence.
           </h2>
 
 
-          <p
-            className="brand-description"
-          >
-            A modern enterprise
-            procurement and Quality
-            Engineering platform
-            designed for secure,
+          <p className="brand-description">
+            A modern enterprise procurement and Quality
+            Engineering platform designed for secure,
             intelligent workflows.
           </p>
 
-
-          {/* ==================================================
-              AI VIDEO-LIKE ANIMATION
-          ================================================== */}
 
           <div
             className="ai-visual"
             aria-hidden="true"
           >
+            <div className="ai-grid" />
 
-            {/* Moving digital background */}
-
-            <div
-              className="ai-grid"
-            />
+            <div className="ai-scan-line" />
 
 
-            {/* Scanner */}
-
-            <div
-              className="ai-scan-line"
-            />
-
-
-            {/* =================================================
-                ORBIT 1
-            ================================================= */}
-
-            <div
-              className="ai-orbit orbit-one"
-            >
-              <span
-                className="orbit-dot orbit-dot-one"
-              />
+            <div className="ai-orbit orbit-one">
+              <span className="orbit-dot orbit-dot-one" />
             </div>
 
 
-            {/* =================================================
-                ORBIT 2
-            ================================================= */}
-
-            <div
-              className="ai-orbit orbit-two"
-            >
-              <span
-                className="orbit-dot orbit-dot-two"
-              />
+            <div className="ai-orbit orbit-two">
+              <span className="orbit-dot orbit-dot-two" />
             </div>
 
 
-            {/* =================================================
-                ORBIT 3
-            ================================================= */}
-
-            <div
-              className="ai-orbit orbit-three"
-            >
-              <span
-                className="orbit-dot orbit-dot-three"
-              />
+            <div className="ai-orbit orbit-three">
+              <span className="orbit-dot orbit-dot-three" />
             </div>
 
 
-            {/* =================================================
-                AI CORE
-            ================================================= */}
+            <div className="ai-core">
+              <div className="ai-core-wave wave-one" />
 
-            <div
-              className="ai-core"
-            >
-              <div
-                className="ai-core-wave wave-one"
-              />
+              <div className="ai-core-wave wave-two" />
 
-              <div
-                className="ai-core-wave wave-two"
-              />
-
-
-              <div
-                className="ai-core-inner"
-              >
-                <span
-                  className="ai-core-label"
-                >
+              <div className="ai-core-inner">
+                <span className="ai-core-label">
                   NEXORA
                 </span>
 
@@ -526,22 +413,14 @@ function App() {
                   AI
                 </strong>
 
-                <span
-                  className="ai-core-status"
-                >
+                <span className="ai-core-status">
                   ANALYSING
                 </span>
               </div>
             </div>
 
 
-            {/* =================================================
-                PROCUREMENT PROCESS NODES
-            ================================================= */}
-
-            <div
-              className="ai-process-node node-supplier"
-            >
+            <div className="ai-process-node node-supplier">
               <span>
                 SUP
               </span>
@@ -552,9 +431,7 @@ function App() {
             </div>
 
 
-            <div
-              className="ai-process-node node-request"
-            >
+            <div className="ai-process-node node-request">
               <span>
                 PR
               </span>
@@ -565,9 +442,7 @@ function App() {
             </div>
 
 
-            <div
-              className="ai-process-node node-order"
-            >
+            <div className="ai-process-node node-order">
               <span>
                 PO
               </span>
@@ -578,9 +453,7 @@ function App() {
             </div>
 
 
-            <div
-              className="ai-process-node node-approval"
-            >
+            <div className="ai-process-node node-approval">
               <span>
                 ✓
               </span>
@@ -591,9 +464,7 @@ function App() {
             </div>
 
 
-            <div
-              className="ai-process-node node-receipt"
-            >
+            <div className="ai-process-node node-receipt">
               <span>
                 GR
               </span>
@@ -604,9 +475,7 @@ function App() {
             </div>
 
 
-            <div
-              className="ai-process-node node-inventory"
-            >
+            <div className="ai-process-node node-inventory">
               <span>
                 INV
               </span>
@@ -617,61 +486,21 @@ function App() {
             </div>
 
 
-            {/* =================================================
-                MOVING DATA PARTICLES
-            ================================================= */}
-
-            <span
-              className="ai-particle particle-one"
-            />
-
-            <span
-              className="ai-particle particle-two"
-            />
-
-            <span
-              className="ai-particle particle-three"
-            />
-
-            <span
-              className="ai-particle particle-four"
-            />
-
-            <span
-              className="ai-particle particle-five"
-            />
-
-            <span
-              className="ai-particle particle-six"
-            />
+            <span className="ai-particle particle-one" />
+            <span className="ai-particle particle-two" />
+            <span className="ai-particle particle-three" />
+            <span className="ai-particle particle-four" />
+            <span className="ai-particle particle-five" />
+            <span className="ai-particle particle-six" />
 
 
-            {/* =================================================
-                DATA CONNECTION STREAMS
-            ================================================= */}
-
-            <div
-              className="ai-data-stream stream-one"
-            />
-
-            <div
-              className="ai-data-stream stream-two"
-            />
-
-            <div
-              className="ai-data-stream stream-three"
-            />
-
+            <div className="ai-data-stream stream-one" />
+            <div className="ai-data-stream stream-two" />
+            <div className="ai-data-stream stream-three" />
           </div>
 
 
-          {/* ==================================================
-              FEATURE TAGS
-          ================================================== */}
-
-          <div
-            className="feature-list"
-          >
+          <div className="feature-list">
             <span>
               Secure access
             </span>
@@ -689,27 +518,14 @@ function App() {
       </section>
 
 
-      {/* ======================================================
-          RIGHT LOGIN PANEL
-      ====================================================== */}
-
-      <section
-        className="form-panel"
-      >
+      <section className="form-panel">
         <form
           className="login-card"
           onSubmit={
             handleLogin
           }
         >
-
-          {/* ==================================================
-              LOGIN HEADER
-          ================================================== */}
-
-          <p
-            className="eyebrow"
-          >
+          <p className="eyebrow">
             SECURE PORTAL
           </p>
 
@@ -719,22 +535,13 @@ function App() {
           </h2>
 
 
-          <p
-            className="form-intro"
-          >
-            Sign in to access the
-            NEXORA procurement
-            workspace.
+          <p className="form-intro">
+            Sign in to access the NEXORA ERP and
+            AI Quality Engineering workspace.
           </p>
 
 
-          {/* ==================================================
-              EMAIL
-          ================================================== */}
-
-          <label
-            htmlFor="email"
-          >
+          <label htmlFor="email">
             Email address
           </label>
 
@@ -744,11 +551,9 @@ function App() {
             type="email"
             autoComplete="email"
             placeholder="name@company.com"
-
             value={
               email
             }
-
             onChange={
               (
                 event,
@@ -760,37 +565,24 @@ function App() {
           />
 
 
-          {/* ==================================================
-              PASSWORD
-          ================================================== */}
-
-          <label
-            htmlFor="password"
-          >
+          <label htmlFor="password">
             Password
           </label>
 
 
-          <div
-            className="password-field"
-          >
+          <div className="password-field">
             <input
               id="password"
-
               type={
                 showPassword
                   ? 'text'
                   : 'password'
               }
-
               autoComplete="current-password"
-
               placeholder="Enter your password"
-
               value={
                 password
               }
-
               onChange={
                 (
                   event,
@@ -804,9 +596,7 @@ function App() {
 
             <button
               className="password-toggle"
-
               type="button"
-
               onClick={
                 () =>
                   setShowPassword(
@@ -826,14 +616,9 @@ function App() {
           </div>
 
 
-          {/* ==================================================
-              ERROR
-          ================================================== */}
-
           {error && (
             <p
               className="error-message"
-
               role="alert"
             >
               {error}
@@ -841,15 +626,9 @@ function App() {
           )}
 
 
-          {/* ==================================================
-              SIGN IN
-          ================================================== */}
-
           <button
             className="submit-button"
-
             type="submit"
-
             disabled={
               isLoading
             }
@@ -862,16 +641,9 @@ function App() {
           </button>
 
 
-          {/* ==================================================
-              SECURITY NOTE
-          ================================================== */}
-
-          <p
-            className="security-note"
-          >
-            Secure authentication
-            protects your NEXORA
-            account.
+          <p className="security-note">
+            Secure authentication protects your
+            NEXORA account.
           </p>
 
         </form>

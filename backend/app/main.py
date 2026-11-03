@@ -18,6 +18,7 @@ from app.api.warehouses import router as warehouses_router
 from app.api.tax_currency import (
     router as tax_currency_router,
 )
+from app.api.ai_answer import router as ai_answer_router
 
 
 app = FastAPI(
@@ -64,6 +65,7 @@ app.include_router(warehouses_router)
 app.include_router(
     tax_currency_router
 )
+app.include_router(ai_answer_router)
 
 
 @app.get("/", tags=["System"])

@@ -1,4 +1,4 @@
-## NEXORA Phase 1 — Procurement Quality Engineering
+# NEXORA Phase 1 — Procurement Quality Engineering
 
 This folder contains the sanitised Quality Engineering documentation, automation evidence, and execution baseline for NEXORA Phase 1 Procurement.
 

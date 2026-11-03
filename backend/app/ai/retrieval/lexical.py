@@ -16,6 +16,14 @@ MAX_TOP_K = 20
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
 
+TERM_FREQUENCY_CAP = 3
+COVERAGE_WEIGHT = 2.0
+METADATA_TERM_WEIGHT = 0.75
+BIGRAM_MATCH_WEIGHT = 1.5
+MAX_BIGRAM_SCORE = 6.0
+SECTION_PHRASE_SCORE = 3.0
+FULL_QUERY_PHRASE_SCORE = 2.5
+
 STOP_WORDS = {
     "a",
     "an",
@@ -87,6 +95,22 @@ def _tokenise(
     )
 
 
+def _create_bigrams(
+    terms: tuple[str, ...],
+) -> set[tuple[str, str]]:
+    """Create adjacent two-term phrases."""
+
+    return {
+        (
+            terms[index],
+            terms[index + 1],
+        )
+        for index in range(
+            len(terms) - 1
+        )
+    }
+
+
 class LexicalRetriever:
     """Rank approved chunks using deterministic lexical relevance."""
 
@@ -125,9 +149,19 @@ class LexicalRetriever:
 
         self._chunks = chunks
 
-        self._term_frequencies = tuple(
-            Counter(_tokenise(chunk.text))
+        self._chunk_tokens = tuple(
+            _tokenise(chunk.text)
             for chunk in chunks
+        )
+
+        self._term_frequencies = tuple(
+            Counter(tokens)
+            for tokens in self._chunk_tokens
+        )
+
+        self._chunk_bigrams = tuple(
+            _create_bigrams(tokens)
+            for tokens in self._chunk_tokens
         )
 
         self._metadata_terms = tuple(
@@ -192,10 +226,12 @@ class LexicalRetriever:
         self,
         *,
         query_terms: set[str],
+        query_bigrams: set[tuple[str, str]],
         normalised_query: str,
         chunk: KnowledgeChunk,
         term_frequency: Counter[str],
         metadata_terms: set[str],
+        chunk_bigrams: set[tuple[str, str]],
     ) -> RetrievalResult | None:
         """Calculate a deterministic relevance score."""
 
@@ -226,7 +262,10 @@ class LexicalRetriever:
             * (
                 1
                 + math.log(
-                    term_frequency[term]
+                    min(
+                        term_frequency[term],
+                        TERM_FREQUENCY_CAP,
+                    )
                 )
             )
             for term in matched_terms
@@ -235,28 +274,65 @@ class LexicalRetriever:
         coverage_score = (
             len(all_matches)
             / len(query_terms)
-        ) * 2.0
+        ) * COVERAGE_WEIGHT
 
         metadata_score = (
             len(metadata_matches)
-            * 0.5
+            * METADATA_TERM_WEIGHT
+        )
+
+        matched_bigrams = (
+            query_bigrams
+            & chunk_bigrams
+        )
+
+        bigram_score = min(
+            len(matched_bigrams)
+            * BIGRAM_MATCH_WEIGHT,
+            MAX_BIGRAM_SCORE,
         )
 
         phrase_score = 0.0
 
+        normalised_chunk = (
+            _normalise_for_phrase(
+                chunk.text
+            )
+        )
+
         if (
             len(query_terms) >= 2
             and normalised_query
-            in _normalise_for_phrase(
-                chunk.text
-            )
+            in normalised_chunk
         ):
-            phrase_score = 2.5
+            phrase_score += (
+                FULL_QUERY_PHRASE_SCORE
+            )
+
+        normalised_section = (
+            _normalise_for_phrase(
+                chunk.section_title
+            )
+        )
+
+        section_terms = _tokenise(
+            chunk.section_title
+        )
+
+        if (
+            len(section_terms) >= 2
+            and normalised_section
+            in normalised_query
+        ):
+            phrase_score += (
+                SECTION_PHRASE_SCORE
+            )
 
         total_score = (
             lexical_score
             + coverage_score
             + metadata_score
+            + bigram_score
             + phrase_score
         )
 
@@ -302,12 +378,20 @@ class LexicalRetriever:
                 "minimum_score cannot be negative."
             )
 
+        query_tokens = _tokenise(
+            query
+        )
+
         query_terms = set(
-            _tokenise(query)
+            query_tokens
         )
 
         if not query_terms:
             return ()
+
+        query_bigrams = _create_bigrams(
+            query_tokens
+        )
 
         normalised_query = (
             _normalise_for_phrase(query)
@@ -319,18 +403,22 @@ class LexicalRetriever:
             chunk,
             term_frequency,
             metadata_terms,
+            chunk_bigrams,
         ) in zip(
             self._chunks,
             self._term_frequencies,
             self._metadata_terms,
+            self._chunk_bigrams,
             strict=True,
         ):
             result = self._score_chunk(
                 query_terms=query_terms,
+                query_bigrams=query_bigrams,
                 normalised_query=normalised_query,
                 chunk=chunk,
                 term_frequency=term_frequency,
                 metadata_terms=metadata_terms,
+                chunk_bigrams=chunk_bigrams,
             )
 
             if (
