@@ -1,4 +1,4 @@
-"""Tests for the local Ollama answer provider."""
+"""Tests for the local and hosted Ollama answer provider."""
 
 from __future__ import annotations
 
@@ -133,12 +133,18 @@ def install_fake_client(
     response: FakeResponse | None = None,
     error: Exception | None = None,
     captured_request: dict[str, Any] | None = None,
+    captured_client_options: dict[str, Any] | None = None,
 ) -> None:
     """Replace the real HTTP client with a controlled fake."""
 
     def fake_client_factory(
         **kwargs: Any,
     ) -> FakeAsyncClient:
+        if captured_client_options is not None:
+            captured_client_options.update(
+                kwargs
+            )
+
         return FakeAsyncClient(
             response=response,
             error=error,
@@ -185,6 +191,46 @@ def test_generate_returns_ollama_content(
     assert payload["options"]["temperature"] == 0.0
     assert payload["messages"][0]["role"] == "system"
     assert payload["messages"][1]["role"] == "user"
+
+
+def test_generate_uses_bearer_authentication_for_hosted_ollama(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Send the configured API key as a Bearer token."""
+
+    captured_client_options: dict[str, Any] = {}
+
+    install_fake_client(
+        monkeypatch,
+        response=FakeResponse(
+            payload={
+                "message": {
+                    "role": "assistant",
+                    "content": "Authenticated answer.",
+                }
+            }
+        ),
+        captured_client_options=captured_client_options,
+    )
+
+    provider = OllamaAnswerProvider(
+        base_url="https://ollama.example",
+        model="controlled-test-model",
+        timeout_seconds=5,
+        api_key="test-hosted-api-key",
+    )
+
+    answer = run_generation(
+        provider
+    )
+
+    assert answer == "Authenticated answer."
+
+    assert captured_client_options["headers"] == {
+        "Authorization": (
+            "Bearer test-hosted-api-key"
+        ),
+    }
 
 
 def test_generate_rejects_empty_system_prompt() -> None:
