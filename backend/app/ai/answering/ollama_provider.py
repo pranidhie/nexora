@@ -14,7 +14,7 @@ class OllamaProviderError(RuntimeError):
 
 
 class OllamaAnswerProvider:
-    """Generate controlled answers using a locally hosted Ollama model."""
+    """Generate controlled answers using local or hosted Ollama."""
 
     def __init__(
         self,
@@ -22,6 +22,7 @@ class OllamaAnswerProvider:
         base_url: str | None = None,
         model: str | None = None,
         timeout_seconds: float | None = None,
+        api_key: str | None = None,
     ) -> None:
         self._base_url = (
             base_url
@@ -37,6 +38,18 @@ class OllamaAnswerProvider:
             timeout_seconds
             if timeout_seconds is not None
             else settings.ollama_timeout_seconds
+        )
+
+        configured_api_key = (
+            api_key
+            if api_key is not None
+            else settings.ollama_api_key
+        )
+
+        self._api_key = (
+            configured_api_key.strip()
+            if configured_api_key
+            else None
         )
 
         if not self._base_url:
@@ -91,12 +104,23 @@ class OllamaAnswerProvider:
             },
         }
 
+        client_options: dict[str, Any] = {
+            "base_url": self._base_url,
+            "timeout": httpx.Timeout(
+                self._timeout_seconds
+            ),
+        }
+
+        if self._api_key:
+            client_options["headers"] = {
+                "Authorization": (
+                    f"Bearer {self._api_key}"
+                ),
+            }
+
         try:
             async with httpx.AsyncClient(
-                base_url=self._base_url,
-                timeout=httpx.Timeout(
-                    self._timeout_seconds
-                ),
+                **client_options
             ) as client:
                 response = await client.post(
                     "/api/chat",
@@ -119,8 +143,7 @@ class OllamaAnswerProvider:
 
         except httpx.RequestError as error:
             raise OllamaProviderError(
-                "NEXORA could not connect to Ollama. "
-                "Confirm that Ollama is running at "
+                "NEXORA could not connect to Ollama at "
                 f"{self._base_url}."
             ) from error
 
