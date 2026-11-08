@@ -1,9 +1,14 @@
+import os
+
 from sqlalchemy import text
 
 from app.db.session import engine
 
 
-ADMIN_EMAIL = "admin@nexora.com"
+ADMIN_EMAIL = os.getenv(
+    "NEXORA_ADMIN_EMAIL",
+    "admin@nexora.com",
+)
 
 SUPPLIER_CODE = "SUP-104"
 CATALOGUE_ITEM_CODE = "RM-MILKPOWDER-001"

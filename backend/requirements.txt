@@ -9,6 +9,8 @@ passlib[argon2]
 python-multipart
 email-validator
 alembic
-httpx
+httpx>=0.27,<1.0
 pytest
 pytest-asyncio
+pypdf
+openpyxl

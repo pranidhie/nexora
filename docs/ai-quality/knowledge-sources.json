@@ -1,0 +1,93 @@
+{
+  "manifest_version": "1.0",
+  "project": "NEXORA",
+  "knowledge_base_id": "nexora-phase-1-procurement-qe",
+  "description": "Approved sanitised knowledge sources for the initial NEXORA QA assistant.",
+  "owner": "NEXORA Quality Engineering",
+  "last_reviewed": "2026-10-21",
+  "default_classification": "PUBLIC_SANITISED",
+  "sources": [
+    {
+      "source_id": "NEXORA-QE-TEST-PLAN-001",
+      "title": "NEXORA Phase 1 Procurement Test Plan",
+      "path": "docs/phase-1-procurement/NEXORA-Phase-1-Procurement-Test-Plan.pdf",
+      "format": "pdf",
+      "document_type": "test_plan",
+      "phase": "phase-1",
+      "domain": "procurement",
+      "classification": "PUBLIC_SANITISED",
+      "approval_status": "approved_for_initial_prototype",
+      "enabled": true,
+      "tags": [
+        "quality-engineering",
+        "test-plan",
+        "procurement",
+        "scope",
+        "strategy"
+      ]
+    },
+    {
+      "source_id": "NEXORA-QE-CONTROL-WORKBOOK-001",
+      "title": "NEXORA Phase 1 Test Control Workbook",
+      "path": "docs/phase-1-procurement/NEXORA-Phase-1-Test-Control-Workbook.xlsx",
+      "format": "xlsx",
+      "document_type": "test_control_workbook",
+      "phase": "phase-1",
+      "domain": "procurement",
+      "classification": "PUBLIC_SANITISED",
+      "approval_status": "approved_for_initial_prototype",
+      "enabled": true,
+      "expected_content": [
+        "requirements",
+        "test_cases",
+        "traceability",
+        "security_tests",
+        "risks",
+        "quality_dashboard"
+      ],
+      "tags": [
+        "requirements",
+        "test-cases",
+        "traceability",
+        "security",
+        "risks"
+      ]
+    },
+    {
+      "source_id": "NEXORA-QE-README-001",
+      "title": "NEXORA Phase 1 Procurement Quality Engineering Overview",
+      "path": "docs/phase-1-procurement/README.md",
+      "format": "markdown",
+      "document_type": "quality_engineering_overview",
+      "phase": "phase-1",
+      "domain": "procurement",
+      "classification": "PUBLIC_SANITISED",
+      "approval_status": "approved_for_initial_prototype",
+      "enabled": true,
+      "tags": [
+        "quality-engineering",
+        "automation",
+        "api-testing",
+        "ui-testing",
+        "database-testing",
+        "current-status"
+      ]
+    }
+  ],
+  "excluded_patterns": [
+    "**/.env",
+    "**/.env.*",
+    "**/*secret*",
+    "**/*credential*",
+    "**/*token*",
+    "**/playwright/.auth/**",
+    "**/node_modules/**",
+    "**/venv/**",
+    "**/__pycache__/**",
+    "**/playwright-report/**",
+    "**/test-results/**",
+    "**/*.log",
+    "**/*.zip",
+    "**/screenshots/**"
+  ]
+}
